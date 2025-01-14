@@ -79,6 +79,22 @@
       .status-red {
         background-color: #f44336 !important;
       }
+      .button-container {
+        text-align: right;
+        margin-bottom: 20px;
+      }
+      .button-container a {
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #00796b;
+        color: #ffffff;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+      .button-container a:hover {
+        background-color: #005a4c;
+      }
       footer {
         margin-top: 20px;
         text-align: center;
@@ -96,10 +112,20 @@
   </head>
   <body>
     <div class="container">
+      <div class="button-container">
+        <a
+          href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf"
+          target="_blank"
+          >CORS</a
+        >
+      </div>
+
       <h1>AgriDoot Status</h1>
+
       <div class="summary" id="summary">
         <!-- Dynamic content will be loaded here -->
       </div>
+
       <footer>&copy; 2023 AgriDoot. All rights reserved.</footer>
     </div>
 
@@ -157,3 +183,4 @@
     </script>
   </body>
 </html>
+

@@ -56,9 +56,6 @@
         transition: transform 0.2s, box-shadow 0.2s;
         animation: fadeIn 0.5s ease-in-out;
       }
-      .summary div.change {
-        background-color: #f9f9f9;
-      }
       .summary div:hover {
         transform: translateY(-3px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -68,10 +65,11 @@
         color: #00796b;
       }
       .status-indicator {
-        width: 12px;
-        height: 12px;
+        width: 35px;
+        height: 35px;
         border-radius: 50%;
-        margin-right: 10px;
+        display: inline-block;
+        margin-left: 10px;
       }
       .status-green {
         background-color: #4caf50 !important;
@@ -82,18 +80,14 @@
       .button-container {
         text-align: right;
         margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
       }
-      .button-container a {
-        text-decoration: none;
-        padding: 10px 20px;
-        background-color: #00796b;
-        color: #ffffff;
-        border-radius: 8px;
+      .status-text {
         font-weight: bold;
-        transition: background-color 0.3s;
-      }
-      .button-container a:hover {
-        background-color: #005a4c;
+        color: #00796b;
+        font-size: 1rem;
       }
       footer {
         margin-top: 20px;
@@ -107,18 +101,18 @@
         .summary {
           grid-template-columns: 1fr;
         }
+        .button-container {
+          justify-content: center;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-<!--       <div class="button-container">
-        <a
-          href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf"
-          target="_blank"
-          >CORS</a
-        >
-      </div> -->
+      <div class="button-container">
+        <span class="status-text"></span>
+        <div class="status-indicator" id="statusIndicator"></div>
+      </div>
 
       <h1>AgriDoot Status</h1>
 
@@ -141,21 +135,24 @@
 
           if (data.response_code === 200 && data.response_status) {
             const summary = data.summary;
-            const statusClass =
-              summary.status === 1 ? "status-green" : "status-red";
-            const statusText = summary.status === 1 ? "Online" : "Offline";
+            const statusIndicator = document.getElementById("statusIndicator");
+
+            if (summary.status === 1) {
+              statusIndicator.className = "status-indicator status-green";
+            } else {
+              statusIndicator.className = "status-indicator status-red";
+            }
 
             const summaryContainer = document.getElementById("summary");
-
             let updatedHtml = "";
 
             Object.entries({
-              "Total Users": summary.userCnt,
+              "Users": summary.userCnt,
               "Active Users": summary.userActive,
-              Status: `<div class="status-indicator ${statusClass}"></div>`,
-              Devices: summary.devCnt,
-              Gyan: summary.gyanQue,
-              Vyom: summary.vyomCnt,
+              "Vyom": summary.vyomCnt + " farms",
+              "Vyom Area": summary.vyomArea + " acres",
+              "Gyan": summary.gyanQue + " ques processed",
+              "Devices": summary.devCnt,
             }).forEach(([label, value], index) => {
               const key = Object.keys(summary)[index];
               const changeClass =
@@ -164,7 +161,6 @@
             });
 
             summaryContainer.innerHTML = updatedHtml;
-
             previousData = { ...summary };
           } else {
             document.getElementById("summary").innerHTML =
@@ -177,10 +173,9 @@
         }
       }
 
-      // Fetch and display the summary on page load and refresh every 1 minute
+      // Fetch and display the summary on page load and refresh every 30 seconds
       fetchSummary();
       setInterval(fetchSummary, 30000);
     </script>
   </body>
 </html>
-

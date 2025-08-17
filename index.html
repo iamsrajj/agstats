@@ -18,6 +18,7 @@
     />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
       body {
@@ -90,28 +91,63 @@
 
   <body class="container py-4">
     <!-- Login Section -->
-    <div id="login-section">
-      <div class="card shadow-sm p-4 mx-auto" style="max-width: 400px">
-        <h2 class="text-center mb-4">Login</h2>
-        <div class="mb-3">
-          <input
-            type="text"
-            id="username"
-            class="form-control"
-            placeholder="Username"
+    <div
+      id="login-section"
+      class="justify-content-center align-items-center"
+      style="
+        background: lightgray,
+          url('your-background.jpg') no-repeat center center/cover;
+        height: 80vh !important;
+        display: flex;
+      "
+    >
+      <div
+        class="card shadow-lg p-4 border-0 text-center"
+        style="
+          max-width: 450px;
+          width: 100%;
+          border-radius: 1rem;
+          background: #fff;
+        "
+      >
+        <div class="d-flex justify-content-center align-items-center mb-3">
+          <img
+            src="agrm.png"
+            alt="AgriDoot Logo"
+            style="
+              width: 80px;
+              height: 80px;
+              object-fit: contain;
+              margin-right: 10px;
+            "
           />
+          <h2 class="fw-bold m-0" style="color: black">Dashboard</h2>
         </div>
-        <div class="mb-3">
-          <input
-            type="password"
-            id="password"
-            class="form-control"
-            placeholder="Password"
-          />
-        </div>
-        <button class="btn btn-dark w-100" onclick="authenticate()">
-          Login
-        </button>
+
+        <p class="text-muted mb-4">Sign in securely to continue</p>
+
+        <!-- Google Sign-In -->
+        <div
+          id="g_id_onload"
+          data-client_id="720727892020-rtfm0ej4t214f04kejpuqbovii6nb95f.apps.googleusercontent.com"
+          data-callback="handleCredentialResponse"
+          data-auto_prompt="false"
+        ></div>
+
+        <div
+          class="g_id_signin"
+          data-type="standard"
+          data-shape="pill"
+          data-theme="filled_blue"
+          data-text="continue_with"
+          data-size="large"
+          data-logo_alignment="left"
+        ></div>
+
+        <!-- Footer note -->
+        <p class="mt-4 mb-0 text-muted" style="font-size: 0.9rem">
+          Only authorized users can access this dashboard.
+        </p>
       </div>
     </div>
 
@@ -327,27 +363,100 @@
     </div>
 
     <script>
-      const validUsers = {
-        iamsrajj: "whosrajj",
-        iammridu: "whomridu",
-        iampawan: "whopawan",
-        iamsmriti: "whosmriti",
-        iamtrishla: "whotrishla",
-      };
+      let whitelist = [];
+      let logoutTimer;
 
-      function authenticate() {
-        const user = document.getElementById("username").value;
-        const pass = document.getElementById("password").value;
-        if (validUsers[user] === pass) {
-          document.getElementById("login-section").style.display = "none";
-          document.getElementById("dashboard").style.display = "block";
-          fetchPing();
-          fetchSummary();
+      // Load whitelist
+      fetch("config.json")
+        .then((res) => res.json())
+        .then((data) => {
+          whitelist = data.whitelist;
+          checkExistingLogin(); // check if user already logged in
+        });
+
+      // Handle Google login
+      function handleCredentialResponse(response) {
+        const data = parseJwt(response.credential);
+        const email = data.email;
+
+        if (whitelist.includes(email)) {
+          // ✅ Save login state with timestamp
+          const loginData = {
+            email: email,
+            timestamp: Date.now(),
+          };
+          localStorage.setItem("agridoot_user", JSON.stringify(loginData));
+
+          showDashboard();
         } else {
-          alert("Invalid credentials");
+          alert(
+            "❌ Access Denied: " +
+              email +
+              " is not authorized.\n Kindly contact your Admin."
+          );
         }
       }
 
+      // Check existing login on refresh
+      function checkExistingLogin() {
+        const saved = localStorage.getItem("agridoot_user");
+        if (saved) {
+          const loginData = JSON.parse(saved);
+          const now = Date.now();
+          const thirtyMinutes = 30 * 60 * 1000;
+
+          if (
+            whitelist.includes(loginData.email) &&
+            now - loginData.timestamp < thirtyMinutes
+          ) {
+            // Session still valid
+            showDashboard(thirtyMinutes - (now - loginData.timestamp));
+          } else {
+            // ❌ Session expired → clear storage
+            logout();
+          }
+        }
+      }
+
+      function showDashboard(remainingTime = 30 * 60 * 1000) {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        fetchPing();
+        fetchSummary();
+
+        // Clear old timer (if any) and set new one
+        if (logoutTimer) clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          alert("⚠️ Session expired. Please sign in again.");
+          logout();
+        }, remainingTime);
+      }
+
+      // Logout function
+      function logout() {
+        localStorage.removeItem("agridoot_user");
+        document.getElementById("dashboard").style.display = "none";
+        document.getElementById("login-section").style.display = "block";
+
+        if (logoutTimer) clearTimeout(logoutTimer);
+      }
+
+      // Helper: decode Google JWT
+      function parseJwt(token) {
+        let base64Url = token.split(".")[1];
+        let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        let jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map(function (c) {
+              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join("")
+        );
+        return JSON.parse(jsonPayload);
+      }
+
+      // After login func
       function fetchPing() {
         fetch("https://apiv2.agridoot.co.in:12443/ping")
           .then((res) => res.json())
@@ -485,5 +594,3 @@
     </script>
   </body>
 </html>
-
-

@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      name="googlebot"
+      content="noindex, nofollow, nosnippet, noarchive, notranslate"
+    />
+
     <title>AgriDoot - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/agfav.ico" />
 
@@ -10,6 +16,9 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
       body {
         background-color: #ffffff;
@@ -157,15 +166,49 @@
         </div>
       </div>
 
+      <!-- User Growth Counts -->
+      <div class="section-title">User Growth</div>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <select id="period" class="form-select" onchange="fetchUserCounts()">
+            <option value="last_7_days">Last 7 Days</option>
+            <option value="this_month" selected>This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="last_6_months">Last 6 Months</option>
+            <option value="last_1_year">Last 1 Year</option>
+            <option value="this_year">This Year</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card p-3">
+            <h5 class="text-center">Users Date-wise</h5>
+            <canvas id="userDateChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card p-3">
+            <h5 class="text-center">Users Region-wise</h5>
+            <canvas id="userRegionChart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- Analytics Section -->
       <div class="section-title">Analytics</div>
       <div class="row g-2 mb-3">
         <div class="col">
           <select id="user-type" class="form-select">
             <option value="all">All</option>
-            <option value="trial">Trial</option>
-            <option value="non-paid">Non-Paid</option>
             <option value="paid">Paid</option>
+            <option value="non-paid">Non-Paid</option>
             <option value="non-farm">Non-Farm</option>
           </select>
         </div>
@@ -174,6 +217,14 @@
             <option value="desc">Newest First</option>
             <option value="asc">Older First</option>
           </select>
+        </div>
+        <div class="col">
+          <input
+            type="text"
+            id="search"
+            class="form-control"
+            placeholder="Search from data"
+          />
         </div>
         <div class="col">
           <button class="btn btn-dark w-100" onclick="fetchAnalytics(1)">
@@ -280,7 +331,7 @@
         iamsrajj: "whosrajj",
         iammridu: "whomridu",
         iampawan: "whopawan",
-        iamkedar: "whokedar",
+        iamsmriti: "whosmriti",
         iamtrishla: "whotrishla",
       };
 
@@ -325,15 +376,79 @@
           });
       }
 
+      let dateChart, regionChart;
+
+      function fetchUserCounts() {
+        const period = document.getElementById("period").value;
+        fetch(`https://api.novosedge.xyz:4433/ad/counts?period=${period}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.infoUser) return;
+
+            // Date-wise
+            const dates = data.infoUser.infoCnt.map((d) =>
+              new Date(d.day).toLocaleDateString()
+            );
+            const counts = data.infoUser.infoCnt.map((d) => d.user_count);
+
+            if (dateChart) dateChart.destroy();
+            dateChart = new Chart(document.getElementById("userDateChart"), {
+              type: "line",
+              data: {
+                labels: dates.reverse(),
+                datasets: [
+                  {
+                    label: "User Count",
+                    data: counts.reverse(),
+                    borderColor: "#017b43",
+                    backgroundColor: "rgba(1, 123, 67, 0.2)",
+                    fill: false,
+                  },
+                ],
+              },
+            });
+
+            // Region-wise
+            const regions = data.infoUser.infoRegion.map((r) => r.region);
+            const regionCounts = data.infoUser.infoRegion.map(
+              (r) => r.user_count
+            );
+
+            if (regionChart) regionChart.destroy();
+            regionChart = new Chart(
+              document.getElementById("userRegionChart"),
+              {
+                type: "bar",
+                data: {
+                  labels: regions,
+                  datasets: [
+                    {
+                      label: "Users",
+                      data: regionCounts,
+                      backgroundColor: "rgba(102, 0, 0, 0.8)",
+                    },
+                  ],
+                },
+                options: {
+                  indexAxis: "y",
+                },
+              }
+            );
+          });
+      }
+
       let currentPage = 1;
 
       function fetchAnalytics(page = 1) {
         currentPage = page;
         const type = document.getElementById("user-type").value;
         const order = document.getElementById("order").value;
+        const search = document.getElementById("search").value;
 
         fetch(
-          `https://api.novosedge.xyz:4433/ad/analytics?type=${type}&order=${order}&page=${page}`
+          `https://api.novosedge.xyz:4433/ad/analytics?type=${type}&order=${order}&page=${page}&search=${encodeURIComponent(
+            search
+          )}`
         )
           .then((res) => res.json())
           .then((data) => {
@@ -364,6 +479,10 @@
       function prevPage() {
         if (currentPage > 1) fetchAnalytics(currentPage - 1);
       }
+
+      // Load on page start
+      document.addEventListener("DOMContentLoaded", fetchUserCounts);
     </script>
   </body>
 </html>
+

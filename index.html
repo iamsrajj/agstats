@@ -413,7 +413,7 @@
         if (saved) {
           const loginData = JSON.parse(saved);
           const now = Date.now();
-          const thirtyMinutes = 12 * 60 * 60 * 1000; // Session timeout in msec
+          const thirtyMinutes = 24 * 60 * 60 * 1000; // Session timeout in msec
 
           if (
             whitelist.includes(loginData.email) &&
@@ -604,5 +604,6 @@
     </script>
   </body>
 </html>
+
 
 

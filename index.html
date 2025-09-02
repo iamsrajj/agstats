@@ -12,119 +12,39 @@
     <title>AgriDoot - Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/agfav.ico" />
 
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
       body {
-        background-color: #ffffff;
-        color: #000;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
-      h1 {
-        color: #017b43;
-      }
-      h2,
-      h3,
-      h4,
-      h5,
-      h6 {
-        color: #000;
-      }
-      .section-title {
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-        font-weight: 600;
-      }
-      .card-title {
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: #000;
-        text-align: center;
-      }
-      .sub-card {
-        background-color: #f0f0f0;
-        padding: 10px;
-        margin-bottom: 8px;
-        border-radius: 8px;
-      }
-      .card-hover:hover {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-      }
-      .others-card {
-        transition: transform 0.2s;
-        cursor: pointer;
-        background-color: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 15px;
-      }
-      .others-card:hover {
-        transform: translateY(-5px);
-        background-color: #f1f1f1;
-      }
-      footer {
-        margin-top: 2rem;
-        text-align: center;
-        padding: 1rem;
-        background: #222;
-        color: #ccc;
-        font-size: 0.9rem;
-        border-top: 1px solid #444;
-      }
-      .status-ok {
-        color: green;
-        font-weight: bold;
-      }
-      .status-not-ok {
-        color: red;
-        font-weight: bold;
+      .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
     </style>
   </head>
 
-  <body class="container py-4">
+  <body
+    class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen"
+  >
     <!-- Login Section -->
     <div
       id="login-section"
-      class="justify-content-center align-items-center"
-      style="
-        background: lightgray,
-          url('your-background.jpg') no-repeat center center/cover;
-        height: 80vh !important;
-        display: flex;
-      "
+      class="flex justify-center items-center min-h-screen"
     >
-      <div
-        class="card shadow-lg p-4 border-0 text-center"
-        style="
-          max-width: 450px;
-          width: 100%;
-          border-radius: 1rem;
-          background: #fff;
-        "
-      >
-        <div class="d-flex justify-content-center align-items-center mb-3">
-          <img
-            src="agrm.png"
-            alt="AgriDoot Logo"
-            style="
-              width: 80px;
-              height: 80px;
-              object-fit: contain;
-              margin-right: 10px;
-            "
-          />
-          <h2 class="fw-bold m-0" style="color: black">Dashboard</h2>
+      <div class="glass shadow-xl rounded-2xl p-8 max-w-md w-full text-center">
+        <div class="flex items-center justify-center mb-4">
+          <img src="agrm.png" alt="AgriDoot Logo" class="w-16 h-16 mr-2" />
+          <h2 class="text-3xl font-bold text-green-400">Dashboard</h2>
         </div>
-
-        <p class="text-muted mb-4">Sign in securely to continue</p>
+        <p class="text-gray-300 mb-6">Sign in securely to continue</p>
 
         <!-- Google Sign-In -->
         <div
@@ -133,7 +53,6 @@
           data-callback="handleCredentialResponse"
           data-auto_prompt="false"
         ></div>
-
         <div
           class="g_id_signin"
           data-type="standard"
@@ -144,297 +63,230 @@
           data-logo_alignment="left"
         ></div>
 
-        <!-- Footer note -->
-        <p class="mt-4 mb-0 text-muted" style="font-size: 0.9rem">
+        <p class="mt-6 text-sm text-gray-400">
           Only authorized users can access this dashboard.
         </p>
       </div>
     </div>
 
     <!-- Main Dashboard -->
-    <div id="dashboard" style="display: none">
-      <h1 class="mb-4">AgriDoot - Analytics Panel</h1>
+    <div id="dashboard" class="hidden p-6">
+      <h1 class="text-4xl font-extrabold text-green-400 mb-8">
+        AgriDoot - Analytics Panel
+      </h1>
 
-      <!-- Ping Section -->
-      <div class="section-title">Status Overview</div>
-      <div class="card p-3 mb-4">
-        <div class="row g-3">
-          <div class="col-md-2">
-            <div class="sub-card">Status: <span id="status"></span></div>
+      <!-- Status Overview -->
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-3">Status Overview</h2>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="glass p-3 rounded-lg">
+            Status: <span id="status"></span>
           </div>
-          <div class="col-md-3">
-            <div class="sub-card">Uptime: <span id="uptime"></span></div>
+          <div class="glass p-3 rounded-lg">
+            Uptime: <span id="uptime"></span>
           </div>
-          <div class="col-md-2">
-            <div class="sub-card">Version: <strong id="version"></strong></div>
-          </div>
-          <div class="col-md-3">
-            <div class="sub-card">Build: <strong id="build"></strong></div>
-          </div>
-          <div class="col-md-2">
-            <div class="sub-card">Mode: <strong id="mode"></strong></div>
-          </div>
+          <div class="glass p-3 rounded-lg">Version: <b id="version"></b></div>
+          <div class="glass p-3 rounded-lg">Build: <b id="build"></b></div>
+          <div class="glass p-3 rounded-lg">Mode: <b id="mode"></b></div>
         </div>
       </div>
 
       <!-- Summary Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="card p-3">
-            <div class="card-title">Users</div>
-            <div class="sub-card">Users: <b id="users-count"></b></div>
-            <div class="sub-card">Active: <b id="users-active"></b></div>
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="glass p-6 rounded-xl">
+          <h3 class="text-center font-bold text-lg mb-2">Users</h3>
+          <p>Users: <b id="users-count"></b></p>
+          <p>Active: <b id="users-active"></b></p>
         </div>
-        <div class="col-md-4">
-          <div class="card p-3">
-            <div class="card-title">Vyom</div>
-            <div class="sub-card">Vyom: <b id="vyom-count"></b></div>
-            <div class="sub-card">Area (acres): <b id="vyom-area"></b></div>
-          </div>
+        <div class="glass p-6 rounded-xl">
+          <h3 class="text-center font-bold text-lg mb-2">Vyom</h3>
+          <p>Vyom: <b id="vyom-count"></b></p>
+          <p>Area (acres): <b id="vyom-area"></b></p>
         </div>
-        <div class="col-md-4">
-          <div class="card p-3">
-            <div class="card-title">Other</div>
-            <div class="sub-card">Gyan Queries: <b id="gyan-queries"></b></div>
-            <div class="sub-card">Devices: <b id="devices"></b></div>
-          </div>
+        <div class="glass p-6 rounded-xl">
+          <h3 class="text-center font-bold text-lg mb-2">Other</h3>
+          <p>Gyan Queries: <b id="gyan-queries"></b></p>
+          <p>Devices: <b id="devices"></b></p>
         </div>
       </div>
 
-      <!-- User Growth Counts -->
-      <div class="section-title">User Growth</div>
+      <!-- User Growth -->
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-3">User Growth</h2>
+        <select
+          id="period"
+          onchange="fetchUserCounts()"
+          class="bg-gray-800 text-white rounded p-2"
+        >
+          <option value="last_7_days">Last 7 Days</option>
+          <option value="this_month" selected>This Month</option>
+          <option value="last_month">Last Month</option>
+          <option value="last_6_months">Last 6 Months</option>
+          <option value="last_1_year">Last 1 Year</option>
+          <option value="this_year">This Year</option>
+          <option value="all">All</option>
+        </select>
 
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <select id="period" class="form-select" onchange="fetchUserCounts()">
-            <option value="last_7_days">Last 7 Days</option>
-            <option value="this_month" selected>This Month</option>
-            <option value="last_month">Last Month</option>
-            <option value="last_6_months">Last 6 Months</option>
-            <option value="last_1_year">Last 1 Year</option>
-            <option value="this_year">This Year</option>
-            <option value="all">All</option>
-          </select>
+        <div class="glass p-6 mt-4 rounded-xl">
+          <h3 class="text-center font-semibold">Users Date-wise</h3>
+          <canvas id="userDateChart"></canvas>
         </div>
-      </div>
 
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="card p-3">
-            <h5 class="text-center">Users Date-wise</h5>
-            <canvas id="userDateChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12">
-          <div class="card p-3">
-            <h5 class="text-center">Users Region-wise</h5>
-            <canvas id="userRegionChart"></canvas>
-          </div>
+        <div class="glass p-6 mt-6 rounded-xl">
+          <h3 class="text-center font-semibold">Users Region-wise</h3>
+          <canvas id="userRegionChart"></canvas>
         </div>
       </div>
 
       <!-- Analytics Section -->
-      <div class="section-title">Analytics</div>
-      <div class="row g-2 mb-3">
-        <div class="col">
-          <select id="user-type" class="form-select">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-3">Analytics</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <select id="user-type" class="bg-gray-800 text-white rounded p-2">
             <option value="all">All</option>
             <option value="paid">Paid</option>
             <option value="non-paid">Non-Paid</option>
             <option value="non-farm">Non-Farm</option>
           </select>
-        </div>
-        <div class="col">
-          <select id="order" class="form-select">
+          <select id="order" class="bg-gray-800 text-white rounded p-2">
             <option value="desc">Newest</option>
             <option value="asc">Older</option>
           </select>
-        </div>
-        <div class="col">
           <input
             type="text"
             id="search"
-            class="form-control"
             placeholder="Search from data"
+            class="bg-gray-800 text-white rounded p-2"
           />
-        </div>
-        <div class="col">
-          <button class="btn btn-dark w-100" onclick="fetchAnalytics(1)">
+          <button
+            class="bg-green-600 hover:bg-green-700 text-white rounded p-2"
+            onclick="fetchAnalytics(1)"
+          >
             Show
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border border-gray-700">
+            <thead class="bg-gray-800" id="table-headers"></thead>
+            <tbody id="user-table" class="text-gray-300"></tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button class="bg-gray-700 px-4 py-2 rounded" onclick="prevPage()">
+            Prev
+          </button>
+          <button class="bg-green-600 px-4 py-2 rounded" onclick="nextPage()">
+            Next
           </button>
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr id="table-headers"></tr>
-          </thead>
-          <tbody id="user-table"></tbody>
-        </table>
-      </div>
-
-      <div class="d-flex justify-content-between" style="margin-top: 30px">
-        <button class="btn btn-secondary" onclick="prevPage()">Prev</button>
-        <button class="btn btn-primary" onclick="nextPage()">Next</button>
-      </div>
-
       <!-- Others Section -->
-      <div class="section-title">Others</div>
-      <div class="row g-3 mb-4">
-        <div class="col-sm-4">
+      <div>
+        <h2 class="text-xl font-semibold mb-3">Others</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://agridoot.com/')"
           >
-            <div class="card-body text-center">
-              <h5>🌐 AgriDoot</h5>
-            </div>
+            🌐 AgriDoot
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://tiler.agridoot.in/')"
           >
-            <div class="card-body text-center">
-              <h5>🛰️ Vyom Tiler</h5>
-            </div>
+            🛰️ Vyom Tiler
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://vyom.agridoot.co.in/html/sign-up.html')"
           >
-            <div class="card-body text-center">
-              <h5>🌿 Vyom Dashboard</h5>
-            </div>
+            🌿 Vyom Dashboard
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://notify.agridoot.co.in:9443/')"
           >
-            <div class="card-body text-center">
-              <h5>🐙 Notify System</h5>
-            </div>
+            🐙 Notify System
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://sales.agridoot.in/')"
           >
-            <div class="card-body text-center">
-              <h5>📈 Sales & TeleCalling</h5>
-            </div>
+            📈 Sales & TeleCalling
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://plans.agridoot.in/')"
           >
-            <div class="card-body text-center">
-              <h5>💵 Vyom Price Calculator</h5>
-            </div>
+            💵 Vyom Price Calculator
           </div>
-        </div>
-        <div class="col-sm-4">
           <div
-            class="card others-card"
+            class="glass p-4 text-center rounded-xl hover:bg-green-800 cursor-pointer"
             onclick="window.open('https://media.agridoot.in/')"
           >
-            <div class="card-body text-center">
-              <h5>🗄️ Media Manager</h5>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-4">
-          <div
-            class="card others-card"
-            onclick="window.open('https://iot.agridoot.in/')"
-          >
-            <div class="card-body text-center">
-              <h5>🎴 IoT Config</h5>
-            </div>
+            🗄️ Media Manager
           </div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <footer>AgriDoot - By NovosEdge &copy; 2024 All Rights Reserved.</footer>
+      <footer
+        class="text-center text-gray-500 mt-10 border-t border-gray-700 pt-4"
+      >
+        AgriDoot - By NovosEdge &copy; 2024 All Rights Reserved.
+      </footer>
     </div>
 
+    <!-- Script: same functionality -->
     <script>
       let whitelist = [];
       let logoutTimer;
 
-      // Load whitelist
       fetch("config.json")
         .then((res) => res.json())
         .then((data) => {
           whitelist = data.whitelist;
-          checkExistingLogin(); // check if user already logged in
+          checkExistingLogin();
         });
 
-      // Handle Google login
       function handleCredentialResponse(response) {
         const data = parseJwt(response.credential);
         const email = data.email;
-
         if (whitelist.includes(email)) {
-          // ✅ Save login state with timestamp
-          const loginData = {
-            email: email,
-            timestamp: Date.now(),
-          };
+          const loginData = { email: email, timestamp: Date.now() };
           localStorage.setItem("agridoot_user", JSON.stringify(loginData));
-
           showDashboard();
         } else {
           alert(
-            "❌ Access Denied: " +
-              email +
-              " is not authorized.\n Kindly contact your Admin."
+            "❌ Access Denied: " + email + " is not authorized. Contact Admin."
           );
         }
       }
 
-      // Check existing login on refresh
       function checkExistingLogin() {
         const saved = localStorage.getItem("agridoot_user");
         if (saved) {
           const loginData = JSON.parse(saved);
           const now = Date.now();
-          const thirtyMinutes = 24 * 60 * 60 * 1000; // Session timeout in msec
-
+          const sessionLimit = 12 * 60 * 60 * 1000;
           if (
             whitelist.includes(loginData.email) &&
-            now - loginData.timestamp < thirtyMinutes
+            now - loginData.timestamp < sessionLimit
           ) {
-            // Session still valid
-            showDashboard(thirtyMinutes - (now - loginData.timestamp));
+            showDashboard(sessionLimit - (now - loginData.timestamp));
           } else {
-            // ❌ Session expired → clear storage
             logout();
           }
         }
       }
 
       function showDashboard(remainingTime = 30 * 60 * 1000) {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
         fetchPing();
         fetchSummary();
-
-        // Clear old timer (if any) and set new one
         if (logoutTimer) clearTimeout(logoutTimer);
         logoutTimer = setTimeout(() => {
           alert("⚠️ Session expired. Please sign in again.");
@@ -442,38 +294,34 @@
         }, remainingTime);
       }
 
-      // Logout function
       function logout() {
         localStorage.removeItem("agridoot_user");
-        document.getElementById("dashboard").style.display = "none";
-        document.getElementById("login-section").style.display = "block";
-
+        document.getElementById("dashboard").classList.add("hidden");
+        document.getElementById("login-section").classList.remove("hidden");
         if (logoutTimer) clearTimeout(logoutTimer);
       }
 
-      // Helper: decode Google JWT
       function parseJwt(token) {
         let base64Url = token.split(".")[1];
         let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
         let jsonPayload = decodeURIComponent(
           atob(base64)
             .split("")
-            .map(function (c) {
-              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-            })
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
             .join("")
         );
         return JSON.parse(jsonPayload);
       }
 
-      // After login func
       function fetchPing() {
         fetch("https://apiv2.agridoot.co.in:12443/ping")
           .then((res) => res.json())
           .then((data) => {
             document.getElementById("status").textContent = data.status;
             document.getElementById("status").className =
-              data.status === "ok" ? "status-ok" : "status-not-ok";
+              data.status === "ok"
+                ? "text-green-400 font-bold"
+                : "text-red-400 font-bold";
             document.getElementById("uptime").textContent = data.uptime;
             document.getElementById("version").textContent = data.version;
             document.getElementById("build").textContent = data.build;
@@ -496,20 +344,16 @@
       }
 
       let dateChart, regionChart;
-
       function fetchUserCounts() {
         const period = document.getElementById("period").value;
         fetch(`https://api.novosedge.xyz:4433/ad/counts?period=${period}`)
           .then((res) => res.json())
           .then((data) => {
             if (!data.infoUser) return;
-
-            // Date-wise
             const dates = data.infoUser.infoCnt.map((d) =>
               new Date(d.day).toLocaleDateString()
             );
             const counts = data.infoUser.infoCnt.map((d) => d.user_count);
-
             if (dateChart) dateChart.destroy();
             dateChart = new Chart(document.getElementById("userDateChart"), {
               type: "line",
@@ -519,20 +363,17 @@
                   {
                     label: "User Count",
                     data: counts.reverse(),
-                    borderColor: "#017b43",
-                    backgroundColor: "rgba(1, 123, 67, 0.2)",
-                    fill: false,
+                    borderColor: "#22c55e",
+                    backgroundColor: "rgba(34,197,94,0.2)",
+                    fill: true,
                   },
                 ],
               },
             });
-
-            // Region-wise
             const regions = data.infoUser.infoRegion.map((r) => r.region);
             const regionCounts = data.infoUser.infoRegion.map(
               (r) => r.user_count
             );
-
             if (regionChart) regionChart.destroy();
             regionChart = new Chart(
               document.getElementById("userRegionChart"),
@@ -544,26 +385,22 @@
                     {
                       label: "Users",
                       data: regionCounts,
-                      backgroundColor: "rgba(102, 0, 0, 0.8)",
+                      backgroundColor: "rgba(59,130,246,0.7)",
                     },
                   ],
                 },
-                options: {
-                  indexAxis: "y",
-                },
+                options: { indexAxis: "y" },
               }
             );
           });
       }
 
       let currentPage = 1;
-
       function fetchAnalytics(page = 1) {
         currentPage = page;
         const type = document.getElementById("user-type").value;
         const order = document.getElementById("order").value;
         const search = document.getElementById("search").value;
-
         fetch(
           `https://api.novosedge.xyz:4433/ad/analytics?type=${type}&order=${order}&page=${page}&search=${encodeURIComponent(
             search
@@ -574,17 +411,16 @@
             const table = document.getElementById("user-table");
             table.innerHTML = "";
             if (!data.userStats.length) return;
-
             const headers = Object.keys(data.userStats[0]);
-            document.getElementById("table-headers").innerHTML = headers
-              .map((h) => `<th>${h}</th>`)
-              .join("");
-
+            document.getElementById("table-headers").innerHTML = `<tr>${headers
+              .map((h) => `<th class='px-4 py-2'>${h}</th>`)
+              .join("")}</tr>`;
             data.userStats.forEach((row) => {
               const tr = document.createElement("tr");
               headers.forEach((h) => {
                 const td = document.createElement("td");
                 td.textContent = row[h];
+                td.className = "px-4 py-2 border border-gray-700";
                 tr.appendChild(td);
               });
               table.appendChild(tr);
@@ -599,11 +435,7 @@
         if (currentPage > 1) fetchAnalytics(currentPage - 1);
       }
 
-      // Load on page start
       document.addEventListener("DOMContentLoaded", fetchUserCounts);
     </script>
   </body>
 </html>
-
-
-

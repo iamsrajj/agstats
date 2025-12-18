@@ -1,6 +1,6 @@
 <div align="center">
 
-# AG Status - By AgriDoot
+# AG DashBoard - By AgriDoot
 
 This webpage is a dynamic dashboard displaying the summary of AgriDoot's operational metrics with analytics data. It fetches live data from the backend API and presents key information, including the total number of devices, users, farms, and other statistics. It also fetches the user specific data for ananlysis. The page features a clean and modern design with animations to highlight updates in real-time. The dashboard automatically refreshes every minute, ensuring users always see the latest data.
 

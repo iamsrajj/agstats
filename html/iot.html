@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriDoot - IoT Device</title>
+
+    <link rel="icon" type="image/x-icon" href="/img/agfav.ico" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #10b981;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto,
+          "Helvetica Neue", Arial, "Noto Sans";
+      }
+      .brand {
+        color: var(--brand);
+      }
+      .btn {
+        @apply inline-flex items-center justify-center rounded-2xl px-4 py-2 font-medium shadow-sm hover:shadow transition;
+      }
+      .btn-primary {
+        @apply bg-emerald-600 text-white hover:bg-emerald-700;
+      }
+      .btn-outline {
+        @apply border border-gray-300 text-gray-700 hover:bg-gray-50;
+      }
+      .card {
+        @apply bg-white/70 backdrop-blur rounded-3xl shadow-lg ring-1 ring-black/5;
+      }
+      .input {
+        @apply w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500;
+      }
+      .label {
+        @apply text-sm font-medium text-gray-700;
+      }
+      .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+      }
+      .badge-green {
+        @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200;
+      }
+      .table th {
+        @apply text-left text-xs font-semibold uppercase tracking-wider text-gray-500;
+      }
+      .table td {
+        @apply text-sm text-gray-800;
+      }
+    </style>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+
+  <body
+    class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50"
+  >
+    <!-- Header -->
+    <header
+      class="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-emerald-100"
+    >
+      <div class="mx-auto max-w-7xl px-4 md:px-6">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div
+              class="h-9 w-9 grid place-items-center rounded-xl bg-emerald-600 text-white font-bold"
+            >
+              AD
+            </div>
+            <div>
+              <h1 class="text-lg font-semibold tracking-tight">
+                AgriDoot — Device Admin
+              </h1>
+              <p class="text-xs text-gray-500 -mt-0.5">
+                Register & Manage Devices
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div
+              id="authStatus"
+              class="hidden md:flex items-center gap-3"
+            ></div>
+            <div id="g_id_signin"></div>
+            <button id="signOutBtn" class="btn btn-outline hidden">
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Alert (e.g., show any 207 messages here) -->
+    <div
+      id="globalAlert"
+      class="mx-auto max-w-7xl px-4 md:px-6 mt-4 hidden"
+    ></div>
+
+    <!-- Main -->
+    <main class="mx-auto max-w-7xl px-4 md:px-6 py-8 space-y-8">
+      <!-- Auth gates -->
+      <div id="authGate" class="card p-6 border border-emerald-100 hidden">
+        <div class="flex items-start gap-4">
+          <div
+            class="h-10 w-10 grid place-items-center rounded-2xl bg-emerald-100 text-emerald-700"
+          >
+            🔐
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold">Sign in required</h2>
+            <p class="text-gray-600 mt-1">
+              Use Google Sign‑In to access registration and the device list.
+              Your session stays active for 8 hours.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="unauthGate" class="card p-6 border border-red-200 hidden">
+        <div class="flex items-start gap-4">
+          <div
+            class="h-10 w-10 grid place-items-center rounded-2xl bg-red-100 text-red-700"
+          >
+            ⛔
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-red-700">
+              Don't Authorize to access
+            </h2>
+            <p class="text-gray-600 mt-1">
+              Kindly contact your admin to get access.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- App content (stacked sections) -->
+      <div id="appContent" class="space-y-6 hidden">
+        <!-- Registration Card -->
+        <section class="card p-8 mx-auto max-w-3xl" id="registerCard">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-center w-full">
+              Register New Device
+            </h2>
+          </div>
+          <form id="regForm" class="space-y-4">
+            <div>
+              <label class="label">Device type</label>
+              <select name="dev_type" class="input" required>
+                <option value="" disabled selected>Select type</option>
+                <option value="pod">pod</option>
+                <option value="pro">pro</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">IMEI number</label>
+              <input
+                name="imei"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]{14,16}"
+                minlength="14"
+                maxlength="16"
+                placeholder="15‑digit IMEI"
+                class="input"
+                required
+              />
+              <p class="text-xs text-gray-500 mt-1">14–16 digits. No spaces.</p>
+            </div>
+            <div>
+              <label class="label">SIM type</label>
+              <select name="sim_type" class="input" required>
+                <option value="" disabled selected>Select SIM</option>
+                <option value="Airtel">Airtel</option>
+                <option value="Jio">Jio</option>
+                <option value="VI">VI</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">SIM number</label>
+              <input
+                name="sim_no"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]{10,20}"
+                placeholder="SIM number"
+                class="input"
+                required
+              />
+            </div>
+            <div>
+              <label class="label">Mobile number</label>
+              <input
+                name="mob_no"
+                type="text"
+                inputmode="tel"
+                pattern="[0-9]{10}"
+                maxlength="10"
+                placeholder="10‑digit mobile"
+                class="input"
+                required
+              />
+            </div>
+            <div>
+              <label class="label">Created by</label>
+              <input
+                name="created_by"
+                type="text"
+                placeholder="Your name or ID"
+                class="input"
+                required
+              />
+            </div>
+            <div class="flex items-center justify-between pt-4">
+              <button type="reset" class="btn btn-outline">Reset</button>
+              <button id="submitBtn" type="submit" class="btn btn-primary">
+                Register
+              </button>
+            </div>
+          </form>
+          <div id="regToast" class="mt-4 hidden"></div>
+        </section>
+
+        <!-- List Card -->
+        <section class="card p-6" id="listCard">
+          <div
+            class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4"
+          >
+            <div>
+              <h2 class="text-xl font-semibold">View all devices</h2>
+              <p class="text-sm text-gray-500">
+                Search by serial number. Leave empty to view all.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                id="searchSerial"
+                class="input w-64"
+                placeholder="Search serial_no..."
+              />
+              <button id="searchBtn" class="btn btn-outline">Search</button>
+              <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+            </div>
+          </div>
+
+          <div class="overflow-auto border border-gray-200 rounded-2xl">
+            <table class="min-w-full table" id="deviceTable">
+              <thead class="bg-gray-50">
+                <tr id="deviceThead"></tr>
+              </thead>
+              <tbody
+                id="deviceTbody"
+                class="divide-y divide-gray-100 bg-white"
+              ></tbody>
+            </table>
+          </div>
+          <div
+            id="listEmpty"
+            class="text-center text-gray-500 text-sm py-6 hidden"
+          >
+            No devices found.
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="py-8 text-center text-sm text-gray-500">
+      Built with ❤️ for AgriDoot •
+      <span class="brand font-semibold">Secure · Fast · Minimal</span>
+    </footer>
+
+    <script>
+      /*************************
+       * Config — EDIT THESE
+       *************************/
+      const GOOGLE_CLIENT_ID =
+        "720727892020-rtfm0ej4t214f04kejpuqbovii6nb95f.apps.googleusercontent.com"; // ← replace
+      const API_BASE = "https://api.novosedge.xyz:4433/ad/dev";
+      // Whitelist: either provide a file named
+      //   ./whitelist.json  -> ["allowed@mail.com", ...]
+      // or edit the fallback array below.
+      const FALLBACK_WHITELIST = ["shashwatraj98765@gmail.com"]; // ← change or leave empty if using file
+
+      /*************************
+       * Utilities
+       *************************/
+      const qs = (s, el = document) => el.querySelector(s);
+      const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+
+      function showToast(el, type, msg) {
+        el.className =
+          "mt-4 p-3 rounded-xl text-sm" +
+          (type === "ok"
+            ? " bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+            : " bg-red-50 text-red-700 ring-1 ring-red-200");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+      }
+      function showGlobal(type, msg) {
+        const el = qs("#globalAlert");
+        el.className = "mx-auto max-w-7xl px-4 md:px-6 mt-4";
+        const box = document.createElement("div");
+        box.className =
+          (type === "ok"
+            ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+            : "bg-amber-50 text-amber-800 ring-amber-200") +
+          " ring-1 rounded-2xl px-4 py-3";
+        box.textContent = msg;
+        el.innerHTML = "";
+        el.appendChild(box);
+        el.classList.remove("hidden");
+      }
+      function clearGlobal() {
+        qs("#globalAlert").classList.add("hidden");
+      }
+
+      function setLoading(btn, loading = true, labelWhenDone) {
+        if (!btn) return;
+        if (loading) {
+          btn.dataset.orig = btn.textContent;
+          btn.disabled = true;
+          btn.innerHTML =
+            '<svg class="animate-spin h-5 w-5 mr-2 inline" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>Working...';
+        } else {
+          btn.disabled = false;
+          btn.textContent = labelWhenDone || btn.dataset.orig || "Submit";
+        }
+      }
+      function humanDate(ts) {
+        try {
+          return ts ? new Date(ts).toLocaleString() : "";
+        } catch {
+          return ts || "";
+        }
+      }
+
+      /*************************
+       * Auth — Google + Whitelist
+       *************************/
+      const SESSION_KEY = "ag_auth"; // { id, name, email, picture, exp, id_token }
+      const WL_KEY = "ag_wl";
+
+      function isSessionActive() {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        try {
+          const s = JSON.parse(raw);
+          return s.exp && Date.now() < s.exp;
+        } catch {
+          return false;
+        }
+      }
+      function getSession() {
+        try {
+          return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+        } catch {
+          return null;
+        }
+      }
+      function saveSession(profile) {
+        profile.exp = Date.now() + 8 * 60 * 60 * 1000;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+        renderAuthUI();
+      }
+      function clearSession() {
+        localStorage.removeItem(SESSION_KEY);
+        renderAuthUI();
+      }
+
+      async function loadWhitelist() {
+        // try cache
+        const cached = localStorage.getItem(WL_KEY);
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch {}
+        }
+        try {
+          const res = await fetch("whitelist.json", { cache: "no-store" });
+          if (res.ok) {
+            const list = await res.json();
+            if (Array.isArray(list)) {
+              localStorage.setItem(WL_KEY, JSON.stringify(list));
+              return list;
+            }
+          }
+        } catch {}
+        // fallback
+        return FALLBACK_WHITELIST;
+      }
+
+      function renderAuthUI() {
+        const gate = qs("#authGate");
+        const unauth = qs("#unauthGate");
+        const app = qs("#appContent");
+        const authStatus = qs("#authStatus");
+        const signOutBtn = qs("#signOutBtn");
+        const gSignIn = qs("#g_id_signin");
+
+        const active = isSessionActive();
+        const session = getSession();
+
+        // Default states
+        gate.classList.toggle("hidden", active);
+        signOutBtn.classList.toggle("hidden", !active);
+        authStatus.classList.toggle("hidden", !active);
+        gSignIn.classList.toggle("hidden", active);
+
+        // Check whitelist when active
+        if (active && session?.email) {
+          loadWhitelist().then((list) => {
+            const allowed =
+              Array.isArray(list) &&
+              list
+                .map((e) => (e || "").toLowerCase().trim())
+                .includes(session.email.toLowerCase());
+            unauth.classList.toggle("hidden", allowed);
+            app.classList.toggle("hidden", !allowed);
+          });
+        } else {
+          app.classList.add("hidden");
+          unauth.classList.add("hidden");
+        }
+
+        if (active && session) {
+          authStatus.innerHTML = `
+          <img src="${session.picture}" class="h-8 w-8 rounded-xl" alt="user"/>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold">${session.name}</div>
+            <div class="text-xs text-gray-500">${
+              session.email
+            } • expires ${new Date(session.exp).toLocaleTimeString()}</div>
+          </div>`;
+        } else {
+          authStatus.innerHTML = "";
+        }
+      }
+
+      window.onload = () => {
+        renderAuthUI();
+        if (window.google && google.accounts) {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+              try {
+                const id_token = response.credential;
+                const payload = JSON.parse(atob(id_token.split(".")[1]));
+                saveSession({
+                  id: payload.sub,
+                  name: payload.name,
+                  email: payload.email,
+                  picture: payload.picture,
+                  id_token,
+                });
+                await loadDeviceList();
+              } catch (e) {
+                console.error(e);
+                alert("Failed to sign in.");
+              }
+            },
+            auto_select: false,
+            ux_mode: "popup",
+          });
+          google.accounts.id.renderButton(qs("#g_id_signin"), {
+            theme: "outline",
+            size: "large",
+            shape: "pill",
+            width: 200,
+          });
+          google.accounts.id.prompt();
+        }
+      };
+
+      qs("#signOutBtn").addEventListener("click", clearSession);
+
+      /*************************
+       * API Calls
+       *************************/
+      async function apiGetList(serial) {
+        const url = new URL(API_BASE + "/list");
+        if (serial && serial.trim())
+          url.searchParams.set("serial_no", serial.trim());
+        const res = await fetch(url, { method: "GET" });
+        if (!res.ok) throw new Error("List fetch failed: " + res.status);
+        return res.json();
+      }
+
+      async function apiRegisterDevice(data) {
+        const formData = new FormData();
+        Object.entries(data).forEach(([k, v]) => formData.append(k, v));
+        const res = await fetch(API_BASE + "/reg", {
+          method: "POST",
+          body: formData,
+        });
+        const text = await res.text();
+        let payload;
+        try {
+          payload = JSON.parse(text);
+        } catch {
+          payload = text;
+        }
+        // Special handling for 207 — show message on top
+        if (res.status === 207) {
+          return { status: 207, payload };
+        }
+        if (!res.ok)
+          throw new Error(
+            (payload && payload.message) || "Registration failed"
+          );
+        return { status: res.status, payload };
+      }
+
+      /*************************
+       * UI — Register form
+       *************************/
+      qs("#regForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearGlobal();
+        if (!isSessionActive()) {
+          alert("Please sign in first.");
+          return;
+        }
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd.entries());
+        if (!["pod", "pro"].includes(data.dev_type))
+          return alert("Invalid device type");
+        if (!["Airtel", "Jio", "VI"].includes(data.sim_type))
+          return alert("Invalid SIM type");
+        const btn = qs("#submitBtn");
+        const toast = qs("#regToast");
+        setLoading(btn, true);
+        toast.classList.add("hidden");
+        try {
+          const resp = await apiRegisterDevice(data);
+          if (resp.status === 207) {
+            const msg =
+              typeof resp.payload === "string"
+                ? resp.payload
+                : resp.payload.message || JSON.stringify(resp.payload);
+            showGlobal("warn", msg || "Partial success (207)");
+          } else {
+            showToast(toast, "ok", "Device registered successfully.");
+            e.target.reset();
+          }
+          await loadDeviceList();
+        } catch (err) {
+          showToast(toast, "err", err.message || "Failed to register");
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+
+      /*************************
+       * UI — List & search (dynamic columns)
+       *************************/
+      qs("#refreshBtn").addEventListener("click", () =>
+        loadDeviceList(qs("#searchSerial").value)
+      );
+      qs("#searchBtn").addEventListener("click", () =>
+        loadDeviceList(qs("#searchSerial").value)
+      );
+      qs("#searchSerial").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          loadDeviceList(qs("#searchSerial").value);
+        }
+      });
+
+      function buildTable(rows) {
+        const thead = qs("#deviceThead");
+        const tbody = qs("#deviceTbody");
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+        if (!rows.length) return;
+        // Collect all keys
+        const cols = Array.from(
+          rows.reduce((set, r) => {
+            Object.keys(r || {}).forEach((k) => set.add(k));
+            return set;
+          }, new Set())
+        );
+        // Header
+        cols.forEach((k) => {
+          const th = document.createElement("th");
+          th.className = "px-4 py-3";
+          th.textContent = k;
+          thead.appendChild(th);
+        });
+        // Body
+        rows.forEach((r, idx) => {
+          const tr = document.createElement("tr");
+          tr.className = idx % 2 ? "bg-gray-50/40" : "";
+          cols.forEach((k) => {
+            const td = document.createElement("td");
+            td.className = "px-4 py-3";
+            let v = r[k];
+            if (
+              k.toLowerCase().includes("date") ||
+              k.toLowerCase().includes("time")
+            )
+              v = humanDate(v);
+            td.textContent = (v ?? "").toString();
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function loadDeviceList(serial = "") {
+        if (!isSessionActive()) return;
+        const tbody = qs("#deviceTbody");
+        const thead = qs("#deviceThead");
+        const empty = qs("#listEmpty");
+        thead.innerHTML = "";
+        tbody.innerHTML = `<tr><td class='px-4 py-6 text-center text-sm text-gray-500' colspan='99'>Loading devices...</td></tr>`;
+        empty.classList.add("hidden");
+        try {
+          const result = await apiGetList(serial);
+          // Flexible extraction of rows from various API shapes
+          const extractRows = (payload) => {
+            if (Array.isArray(payload)) return payload;
+            const keys = ["data", "rows", "result", "items", "devices", "list"];
+            for (const k of keys) {
+              if (Array.isArray(payload?.[k])) return payload[k];
+            }
+            // search first array value
+            if (payload && typeof payload === "object") {
+              const firstArr = Object.values(payload).find((v) =>
+                Array.isArray(v)
+              );
+              if (Array.isArray(firstArr)) return firstArr;
+            }
+            return [];
+          };
+          const rows = extractRows(result);
+          thead.innerHTML = "";
+          tbody.innerHTML = "";
+          if (!rows.length) {
+            empty.classList.remove("hidden");
+            return;
+          }
+          buildTable(rows);
+        } catch (e) {
+          console.error("List error:", e);
+          tbody.innerHTML = `<tr><td colspan='99' class='px-4 py-6 text-center text-red-600'>Failed to load list: ${e.message}</td></tr>`;
+        }
+      }
+
+      if (isSessionActive()) loadDeviceList();
+    </script>
+  </body>
+</html>

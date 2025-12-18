@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>AgriDoot - GYAN AI</title>
+    <link rel="icon" type="image/x-icon" href="/img/agfav.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        background: #0f766e;
+        color: white;
+        padding: 15px;
+        text-align: center;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      h2 {
+        margin-top: 0;
+        color: #0f766e;
+      }
+
+      input,
+      textarea,
+      select,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
+
+      button {
+        background: #0f766e;
+        color: white;
+        cursor: pointer;
+        border: none;
+      }
+
+      button:hover {
+        background: #115e59;
+      }
+
+      .output {
+        white-space: pre-wrap;
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border-left: 4px solid #0f766e;
+      }
+
+      .medicine a {
+        display: block;
+        color: #2563eb;
+        text-decoration: none;
+        margin-top: 5px;
+      }
+
+      .medicine a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        text-align: center;
+        padding: 10px;
+        font-size: 13px;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>🌱 Gyan AI</h1>
+      <p>Chat & Vision for Smart Farming</p>
+    </header>
+
+    <div class="container">
+      <!-- ================= CHAT ================= -->
+      <div class="card">
+        <h2>💬 Gyan Chat</h2>
+
+        <input
+          type="number"
+          id="chat_user_id"
+          value="54"
+          placeholder="User ID"
+        />
+        <textarea
+          id="chat_query"
+          rows="4"
+          placeholder="Ask your farming question..."
+        ></textarea>
+
+        <button onclick="sendChat()">Ask Gyan</button>
+
+        <div id="chat_output" class="output"></div>
+      </div>
+
+      <!-- ================= VISION ================= -->
+      <div class="card">
+        <h2>📷 Gyan Vision</h2>
+
+        <input
+          type="number"
+          id="vision_user_id"
+          value="54"
+          placeholder="User ID"
+        />
+
+        <select id="vision_lang">
+          <option value="hindi">Hindi</option>
+          <option value="english">English</option>
+        </select>
+
+        <input type="file" id="vision_image" accept="image/*" />
+
+        <button onclick="sendVision()">Analyze Image</button>
+
+        <div id="vision_output" class="output"></div>
+      </div>
+    </div>
+
+    <footer>Powered by <strong>Drona – Gyan AI</strong> | © NovosEdge</footer>
+
+    <script>
+      /* ================= CHAT ================= */
+      function sendChat() {
+        const userId = document.getElementById("chat_user_id").value;
+        const query = document.getElementById("chat_query").value;
+        const output = document.getElementById("chat_output");
+
+        output.innerText = "⏳ Getting response...";
+
+        const formData = new FormData();
+        formData.append("user_id", userId);
+        formData.append("query", query);
+
+        fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.response_status) {
+              output.innerText = data.dronaRes.ans;
+            } else {
+              output.innerText = "❌ Failed to get response";
+            }
+          })
+          .catch((err) => {
+            output.innerText = "❌ Error: " + err;
+          });
+      }
+
+      /* ================= VISION ================= */
+      function sendVision() {
+        const userId = document.getElementById("vision_user_id").value;
+        const lang = document.getElementById("vision_lang").value;
+        const image = document.getElementById("vision_image").files[0];
+        const output = document.getElementById("vision_output");
+
+        if (!image) {
+          alert("Please select an image");
+          return;
+        }
+
+        output.innerText = "⏳ Analyzing image...";
+
+        const formData = new FormData();
+        formData.append("user_id", userId);
+        formData.append("lang", lang);
+        formData.append("image", image);
+
+        fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan/vision", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.response_status) {
+              let html = data.dronaVis.ans + "\n\n";
+
+              if (data.dronaVis.med && data.dronaVis.med.length > 0) {
+                html += "\n📌 Recommended Medicines:\n";
+                data.dronaVis.med.forEach((m) => {
+                  html += `\n- ${m.Crop}: ${m.Medicine}`;
+                });
+              }
+
+              output.innerText = html;
+            } else {
+              output.innerText = "❌ Detection failed";
+            }
+          })
+          .catch((err) => {
+            output.innerText = "❌ Error: " + err;
+          });
+      }
+    </script>
+  </body>
+</html>

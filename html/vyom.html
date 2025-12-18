@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>AgriDoot - Vyom</title>
+    <link rel="icon" type="image/x-icon" href="/img/agfav.ico" />
+
+    <!-- Calendar Pickr -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Google Maps (kept your key) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcL2lW9ccI9gQj8evpE7-npp57w_XULSY"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Marked (markdown -> html) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify (sanitize HTML) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+    <!-- Choices.js for searchable dropdown (kept) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- Guard script -->
+    <script src="/js/guard.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: #f3f4f6;
+        color: #1f2937;
+      }
+      header {
+        background: #166534;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 30px;
+        font-size: 1.6rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+      header img {
+        height: 40px;
+        width: auto;
+        border-radius: 6px;
+      }
+      .container {
+        padding: 30px 20px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      form {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+        align-items: end;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        font-size: 1rem;
+        background-color: #f9fafb;
+        transition: border 0.3s ease;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #4ade80;
+        background-color: #fff;
+      }
+      button {
+        background-color: #22c55e;
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #16a34a;
+      }
+      #loading {
+        color: #16a34a;
+        font-style: italic;
+        font-size: 0.95rem;
+        margin-top: 5px;
+        grid-column: span 2;
+      }
+      #map {
+        width: 100%;
+        height: 60vh;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e5e7eb;
+        margin-top: 12px;
+      }
+      @media (max-width: 600px) {
+        form {
+          grid-template-columns: 1fr;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+      .spinner {
+        grid-column: span 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+      .spinner-icon {
+        animation: rotate 1s linear infinite;
+        width: 30px;
+        height: 30px;
+      }
+      .spinner .path {
+        stroke: #16a34a;
+        stroke-linecap: round;
+        animation: dash 1.5s ease-in-out infinite;
+      }
+      @keyframes rotate {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes dash {
+        0% {
+          stroke-dasharray: 1, 150;
+          stroke-dashoffset: 0;
+        }
+        50% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -35;
+        }
+        100% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -124;
+        }
+      }
+
+      /* Farm info card updated */
+      .farm-card {
+        background: #ffffff;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin-bottom: 12px;
+        display: none;
+      }
+      .farm-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+      .farm-left-title {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .farm-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #064e3b;
+      }
+      .farm-subtitle {
+        font-size: 0.95rem;
+        color: #0f172a;
+      }
+      .farm-right-title {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-end;
+      }
+      .plan-line {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #065f46;
+      }
+      .days-left {
+        font-size: 0.9rem;
+        font-weight: 700;
+        padding: 6px 10px;
+        border-radius: 999px;
+        color: #fff;
+      }
+      .days-green {
+        background: #16a34a;
+      }
+      .days-yellow {
+        background: #f59e0b;
+      }
+      .days-red {
+        background: #dc2626;
+      }
+
+      .section {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #e6e6e6;
+      }
+      .section h4 {
+        margin: 0 0 8px 0;
+        font-size: 0.95rem;
+        color: #065f46;
+      }
+      .info-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+      .info-label {
+        min-width: 150px;
+        font-weight: 600;
+        color: #065f46;
+      }
+      .info-value {
+        flex: 1;
+        color: #0f172a;
+      }
+
+      /* Crop capsules */
+      .crop-list {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .crop-capsule {
+        background: #f8fafc;
+        border: 1px solid #e6eef0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        min-width: 180px;
+        box-shadow: 0 1px 4px rgba(2, 6, 23, 0.04);
+      }
+      .capsule-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+      }
+      .capsule-sub {
+        font-size: 0.9rem;
+        color: #374151;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .pill-green {
+        background: #16a34a;
+      }
+      .pill-red {
+        background: #dc2626;
+      }
+      .meta-small {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      .farm-empty {
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      /* ===== Weather card styles (new) ===== */
+      .weather-card {
+        background: #ffffff;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin-top: 12px;
+        max-width: 1100px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .weather-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .weather-current {
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      .weather-grid {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .weather-block {
+        min-width: 180px;
+        background: #f8fafc;
+        border: 1px solid #e6eef0;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      /* suggestion card */
+      .sugg-card {
+        background: #ffffff;
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin-top: 12px;
+        max-width: 1100px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .sugg-block {
+        background: #f8fafc;
+        border: 1px solid #e6eef0;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <img src="/img/agl.png" alt="Logo" />
+      AgriDoot - Vyom
+    </header>
+
+    <div class="container">
+      <form id="tileForm">
+        <input
+          type="text"
+          id="phone_no"
+          placeholder="Phone Number"
+          maxlength="10"
+        />
+        <select id="polygon_select">
+          <option value="">Select Farm</option>
+        </select>
+        <input type="hidden" id="polygon_id" />
+        <select id="plan_variant" name="plan_variant" required>
+          <option value="gold" selected>Gold</option>
+          <option value="platinum">Platinum</option>
+        </select>
+        <select id="satellite-index" name="satellite-index" required>
+          <!-- options omitted for brevity (same as original) -->
+          <optgroup label="Sentinel-1">
+            <option value="SMI" data-satellite="Sentinel-1">
+              SMI - Soil Moisture Index
+            </option>
+            <option value="RSM" data-satellite="Sentinel-1">
+              RSM - Relative Soil Moisture
+            </option>
+            <option value="RVI" data-satellite="Sentinel-1">
+              RVI - Relative Vegetation Index
+            </option>
+          </optgroup>
+          <optgroup label="Sentinel-2">
+            <option value="CCC" data-satellite="Sentinel-2">
+              CCC - Canopy Chlorophyll Content
+            </option>
+            <option value="CWC" data-satellite="Sentinel-2">
+              CWC - Canopy Water Content
+            </option>
+            <option value="EVI" data-satellite="Sentinel-2">
+              EVI - Enhanced Vegetation Index
+            </option>
+            <option value="FAPAR" data-satellite="Sentinel-2">
+              FAPAR - Fraction of Photosynthetically Active Radiation
+            </option>
+            <option value="IRECI" data-satellite="Sentinel-2">
+              IRECI - Inverted Red-Edge Chlorophyll Index
+            </option>
+            <option value="LAI" data-satellite="Sentinel-2">
+              LAI - Leaf Area Index
+            </option>
+            <option value="MNDWI" data-satellite="Sentinel-2">
+              MNDWI - Modified Normalized Difference Water Index
+            </option>
+            <option value="MSAVI2" data-satellite="Sentinel-2">
+              MSAVI2 - Modified Soil-adjusted Vegetation Index
+            </option>
+            <option value="NDMI" data-satellite="Sentinel-2">
+              NDMI - Normalized Difference Moisture Index
+            </option>
+            <option value="NDRE" data-satellite="Sentinel-2">
+              NDRE - Normalized Difference Red Edge Index (B05, B08)
+            </option>
+            <option value="NDVI" data-satellite="Sentinel-2">
+              NDVI - Normalized Difference Vegetation Index
+            </option>
+            <option value="NDWI" data-satellite="Sentinel-2">
+              NDWI - Normalized Difference Water Index
+            </option>
+            <option value="NMDI" data-satellite="Sentinel-2">
+              NMDI - Normalized Multi-band Drought Index
+            </option>
+            <option value="SOC_VIS" data-satellite="Sentinel-2">
+              SOC_VIS - Soil Organic Carbon (visible spectra)
+            </option>
+            <option value="SOC_SWIR" data-satellite="Sentinel-2">
+              SOC_SWIR - Soil Organic Carbon (NIR and SWIR)
+            </option>
+            <option value="WIW" data-satellite="Sentinel-2">
+              WIW - Water In Wetlands
+            </option>
+          </optgroup>
+          <optgroup label="Planet">
+            <option value="ARI1" data-satellite="Planet">
+              ARI1 - Anthocyanin Reflectance Index 1
+            </option>
+            <option value="CAR_RE" data-satellite="Planet">
+              CAR_RE - Red-edge Carotenoid Reflectance Index
+            </option>
+            <option value="CL_RE" data-satellite="Planet">
+              CL_RE - Red-Edge Chlorophyll Index
+            </option>
+            <option value="EVI" data-satellite="Planet">
+              EVI - Enhanced Vegetation Index
+            </option>
+            <option value="MSAVI2" data-satellite="Planet">
+              MSAVI2 - Modified Soil-adjusted Vegetation Index
+            </option>
+            <option value="NDRE" data-satellite="Planet">
+              NDRE - Normalized Difference Red Edge Index (B05, B08)
+            </option>
+            <option value="NDVI" data-satellite="Planet">
+              NDVI - Normalized Difference Vegetation Index
+            </option>
+            <option value="NDWI" data-satellite="Planet">
+              NDWI - Normalized Difference Water Index
+            </option>
+            <option value="SI" data-satellite="Planet">
+              SI - Salinity Index
+            </option>
+            <option value="SOC_VIS" data-satellite="Planet">
+              SOC_VIS - Soil Organic Carbon (visible spectra)
+            </option>
+            <option value="YRSI" data-satellite="Planet">
+              YRSI - Yellow Rust Spore Index
+            </option>
+          </optgroup>
+        </select>
+
+        <div style="position: relative; display: inline-block">
+          <input
+            type="date"
+            id="obs_date"
+            name="obs_date"
+            style="padding-left: 40px"
+          />
+          <span
+            style="
+              position: absolute;
+              top: 50%;
+              left: 8px;
+              transform: translateY(-50%);
+              pointer-events: none;
+            "
+            >📅</span
+          >
+        </div>
+        <input
+          type="text"
+          id="satellite-type"
+          name="satellite-type"
+          readonly
+          placeholder="Satellite Type"
+        />
+
+        <button type="submit">Load</button>
+        <div id="loading" class="spinner" style="display: none">
+          <svg viewBox="0 0 50 50" class="spinner-icon">
+            <circle
+              class="path"
+              cx="25"
+              cy="25"
+              r="20"
+              fill="none"
+              stroke-width="5"
+            ></circle>
+          </svg>
+        </div>
+      </form>
+
+      <!-- Farm info card (JS populates) -->
+      <div id="farmInfo" class="farm-card" aria-live="polite">
+        <!-- Top: left title (farm name + details) and right: plan summary -->
+        <div class="farm-top">
+          <div class="farm-left-title">
+            <div class="farm-name" id="farm_title">Polygon details</div>
+            <div class="farm-subtitle" id="farm_sub">
+              Details fetched from /gis/list
+            </div>
+          </div>
+
+          <div class="farm-right-title" id="plan_summary">
+            <!-- populated by JS: Plan Type / Plan Variant and days left -->
+            <div class="plan-line" id="plan_type_variant">Plan · Variant</div>
+            <div id="days_left_box" class="days-left days-yellow">
+              -- d left
+            </div>
+          </div>
+        </div>
+
+        <!-- Main sections -->
+        <div class="section" id="user_info_section">
+          <h4>User Info</h4>
+          <div id="user_info_rows">
+            <!-- user rows inserted here -->
+          </div>
+        </div>
+
+        <div class="section" id="crop_info_section">
+          <h4>Crop Info</h4>
+          <div id="crop_info_rows" class="crop-list">
+            <!-- crop capsules go here -->
+          </div>
+        </div>
+
+        <div class="section" id="plan_info_section">
+          <h4>Plan Info</h4>
+          <div id="plan_info_rows">
+            <!-- plan rows inserted here -->
+          </div>
+        </div>
+
+        <div class="section" id="status_section">
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              align-items: center;
+              flex-wrap: wrap;
+            "
+          >
+            <div>
+              Status: <span id="status_pill" class="pill pill-green">-</span>
+            </div>
+            <div>
+              Active: <span id="active_pill" class="pill pill-green">-</span>
+            </div>
+            <div class="meta-small" id="polygon_meta">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div id="map"></div>
+
+      <!-- ===== Weather card (new) ===== -->
+      <div
+        id="weatherCard"
+        class="weather-card"
+        style="display: none"
+        aria-live="polite"
+      >
+        <div class="weather-top">
+          <div>
+            <div class="weather-current" id="weather_location">
+              Weather — &nbsp;<span id="weather_datetime">-</span>
+            </div>
+            <div class="meta-small" id="weather_status">Status: -</div>
+          </div>
+          <div id="weather_summary" class="meta-small"></div>
+        </div>
+
+        <div id="weather_current" style="margin-top: 12px">
+          <!-- current details populated here -->
+        </div>
+
+        <h4 style="margin-top: 12px; color: #065f46">Hourly (next 6)</h4>
+        <div id="weather_hourly" class="weather-grid">
+          <!-- hourly cards -->
+        </div>
+
+        <h4 style="margin-top: 12px; color: #065f46">Daily</h4>
+        <div id="weather_daily" class="weather-grid">
+          <!-- daily cards -->
+        </div>
+      </div>
+
+      <!-- Crop suggestions (weasugg) -->
+      <div
+        id="weaSuggCard"
+        class="sugg-card"
+        style="display: none"
+        aria-live="polite"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="font-weight: 800">Farm Suggestions</div>
+          <div class="meta-small" id="weaSugg_status">--</div>
+        </div>
+
+        <div id="weaSugg_container" style="margin-top: 12px"></div>
+      </div>
+    </div>
+
+    <script>
+      let map;
+      let overlays = [];
+      const elements = {
+        indexDropdown: document.getElementById("satellite-index"),
+        satelliteTypeInput: document.getElementById("satellite-type"),
+        planVariantInput: document.getElementById("plan_variant"),
+        phoneInput: document.getElementById("phone_no"),
+        polygonSelect: document.getElementById("polygon_select"),
+        polygonIdInput: document.getElementById("polygon_id"),
+        obsDateInput: document.getElementById("obs_date"),
+        loadButton: document.querySelector("#tileForm button[type='submit']"),
+        loading: document.getElementById("loading"),
+        farmInfoCard: document.getElementById("farmInfo"),
+        userInfoRows: document.getElementById("user_info_rows"),
+        cropInfoRows: document.getElementById("crop_info_rows"),
+        planInfoRows: document.getElementById("plan_info_rows"),
+        farmTitle: document.getElementById("farm_title"),
+        farmSub: document.getElementById("farm_sub"),
+        planTypeVariant: document.getElementById("plan_type_variant"),
+        daysLeftBox: document.getElementById("days_left_box"),
+        statusPill: document.getElementById("status_pill"),
+        activePill: document.getElementById("active_pill"),
+        polygonMeta: document.getElementById("polygon_meta"),
+        weatherCard: document.getElementById("weatherCard"),
+        weaSuggCard: document.getElementById("weaSuggCard"),
+        weaSuggContainer: document.getElementById("weaSugg_container"),
+        weaSuggStatus: document.getElementById("weaSugg_status"),
+      };
+
+      // NOTE: api base left as in your original file
+      const novoBase = "https://api.novosedge.xyz:4433";
+      const weatherBase = "https://apiv2.agridoot.co.in:12443";
+      const weatherApiKey = "agridoot_a7c3d1f905be4d67b14fa12e5e8c32bd";
+
+      async function fetchUserIdFromPhone(phone) {
+        const url = `${novoBase}/ad/user/login?cc=91&phone=${phone}`;
+        const resp = await axios.get(url);
+        if (resp.data?.response_status) {
+          return resp.data.userDetails.user_id;
+        }
+        throw new Error("Invalid phone number");
+      }
+
+      async function fetchPolygonsForUser(user_id) {
+        const form = new FormData();
+        form.append("user_id", user_id);
+        const resp = await axios.post(`${novoBase}/gis/list`, form);
+        return resp.data?.farmList || [];
+      }
+
+      function populatePolygonDropdown(farms) {
+        elements.polygonSelect.innerHTML =
+          '<option value="">Select Farm</option>';
+
+        farms.forEach((farm) => {
+          const opt = document.createElement("option");
+          opt.value = farm.polygon_id;
+          opt.innerHTML = `
+      ${farm.polygon_name}
+      (${farm.polygon_id})
+    `;
+          opt.dataset.pid = farm.polygon_id;
+          elements.polygonSelect.appendChild(opt);
+        });
+      }
+
+      elements.indexDropdown.addEventListener("change", () => {
+        const satellite =
+          elements.indexDropdown.selectedOptions[0].getAttribute(
+            "data-satellite"
+          );
+        elements.satelliteTypeInput.value = satellite || "";
+        validateForm();
+        fetchObservationDates();
+        if (elements.polygonIdInput.value.trim())
+          fetchFarmList(elements.polygonIdInput.value.trim());
+      });
+
+      elements.phoneInput.addEventListener("blur", async () => {
+        const phone = elements.phoneInput.value.trim();
+        if (phone.length !== 10) return;
+
+        try {
+          elements.loading.style.display = "inline";
+
+          const user_id = await fetchUserIdFromPhone(phone);
+          window.__ACTIVE_USER_ID__ = user_id; // cache
+
+          const farms = await fetchPolygonsForUser(user_id);
+          populatePolygonDropdown(farms);
+        } catch (e) {
+          alert("Failed to fetch farms");
+        } finally {
+          elements.loading.style.display = "none";
+        }
+      });
+
+      elements.polygonSelect.addEventListener("change", () => {
+        const pid = elements.polygonSelect.value;
+        if (!pid) return;
+
+        // set hidden polygon_id
+        elements.polygonIdInput.value = pid;
+
+        // trigger existing flow
+        fetchFarmList(pid);
+        fetchObservationDates();
+        validateForm();
+      });
+
+      [elements.polygonIdInput].forEach((input) =>
+        input.addEventListener("input", validateForm)
+      );
+
+      elements.polygonIdInput.addEventListener("blur", () => {
+        fetchObservationDates();
+        const pid = elements.polygonIdInput.value.trim();
+        if (pid) fetchFarmList(pid);
+      });
+
+      function validateForm() {
+        const { polygonIdInput, indexDropdown, obsDateInput, loadButton } =
+          elements;
+        loadButton.disabled = !(
+          polygonIdInput.value &&
+          indexDropdown.value &&
+          obsDateInput.value
+        );
+      }
+
+      async function fetchObservationDates() {
+        const {
+          polygonIdInput,
+          satelliteTypeInput,
+          obsDateInput,
+          planVariantInput,
+        } = elements;
+        const user_id = "1";
+        const polygon_id = polygonIdInput.value.trim();
+        const satellite = satelliteTypeInput.value.trim();
+        const plan_variant = planVariantInput?.value?.trim() || "";
+        if (!user_id || !polygon_id || !satellite) return;
+        obsDateInput.disabled = true;
+        try {
+          const formData = new FormData();
+          formData.append("user_id", user_id);
+          formData.append("polygon_id", polygon_id);
+          if (plan_variant) formData.append("plan_variant", plan_variant);
+          const resp = await axios.post(`${novoBase}/gis/raw`, formData);
+          const data = resp.data || {};
+          const sources = data?.farmRaw?.raw_data?.[0]?.sources || [];
+          const matched = sources.find(
+            (s) => s.name?.toLowerCase() === satellite.toLowerCase()
+          );
+          const validDates = matched?.valid_observations || [];
+          if (validDates.length > 0) {
+            validDates.sort((a, b) => new Date(a) - new Date(b));
+            obsDateInput.disabled = false;
+            if (obsDateInput._flatpickr) obsDateInput._flatpickr.destroy();
+            flatpickr(obsDateInput, {
+              dateFormat: "Y-m-d",
+              enable: validDates,
+              defaultDate: validDates[validDates.length - 1],
+            });
+          } else {
+            obsDateInput.value = "";
+            if (obsDateInput._flatpickr) obsDateInput._flatpickr.destroy();
+            console.warn(
+              `No observation dates found for ${satellite} on polygon ${polygon_id}`
+            );
+          }
+        } catch (err) {
+          console.error("Error fetching observation dates:", err);
+        } finally {
+          validateForm();
+        }
+      }
+
+      function initMap(center = { lat: 23.06205, lng: 78.346 }) {
+        if (!map) {
+          map = new google.maps.Map(document.getElementById("map"), {
+            center,
+            zoom: 18,
+            mapTypeId: "satellite",
+          });
+        } else {
+          map.setCenter(center);
+          map.setZoom(18);
+        }
+      }
+      function clearOverlays() {
+        overlays.forEach((o) => o.setMap(null));
+        overlays = [];
+      }
+      function addImageOverlay(tilePath, bounds) {
+        // bounds: [ [lat1, lon1], [lat2, lon2] ] expected
+        const [topLeft, bottomRight] = bounds;
+        const tileBounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(bottomRight[0], topLeft[1]),
+          new google.maps.LatLng(topLeft[0], bottomRight[1])
+        );
+        const overlay = new google.maps.GroundOverlay(tilePath, tileBounds);
+        overlay.setMap(map);
+        overlays.push(overlay);
+      }
+
+      function saveFormToLocalStorage() {
+        [
+          "phone_no",
+          "polygon_id",
+          "satellite-index",
+          "obs_date",
+          "satellite-type",
+          "plan_variant",
+        ].forEach((key) => {
+          const el = document.getElementById(key);
+          if (el) localStorage.setItem(key, el.value);
+        });
+      }
+      function loadFormFromLocalStorage() {
+        [
+          "phone_no",
+          "polygon_id",
+          "satellite-index",
+          "obs_date",
+          "satellite-type",
+          "plan_variant",
+        ].forEach((key) => {
+          const value = localStorage.getItem(key);
+          if (value) {
+            const el = document.getElementById(key);
+            if (el) el.value = value;
+          }
+        });
+      }
+
+      async function fetchFarmList(polygon_id) {
+        if (!polygon_id) return null;
+        elements.farmInfoCard.style.display = "block";
+        elements.userInfoRows.innerHTML =
+          '<div class="farm-empty">Loading farm details…</div>';
+        elements.farmTitle.textContent = "Polygon details";
+        elements.farmSub.textContent = "Fetching from /gis/list";
+        try {
+          const form = new FormData();
+          form.append("polygon_id", polygon_id);
+          const resp = await axios.post(`${novoBase}/gis/list`, form);
+          const d = resp.data || {};
+          if (d && Array.isArray(d.farmList) && d.farmList.length > 0) {
+            const farm = d.farmList[0];
+            renderFarmInfo(farm);
+            // fetch weather from the farm polygon (NEW)
+            fetchWeatherFromFarm(farm);
+            // fetch crop suggestions for each crop/sowing
+            fetchWeaSuggFromFarm(farm);
+            return farm;
+          } else {
+            elements.userInfoRows.innerHTML =
+              '<div class="farm-empty">No farm found for this polygon id.</div>';
+            elements.polygonMeta.textContent = "";
+            // hide weather if previously shown
+            document.getElementById("weatherCard").style.display = "none";
+            elements.weaSuggCard.style.display = "none";
+            return null;
+          }
+        } catch (err) {
+          console.error("Error fetching /gis/list:", err);
+          elements.userInfoRows.innerHTML =
+            '<div class="farm-empty">Failed to fetch farm details.</div>';
+          elements.polygonMeta.textContent = "";
+          document.getElementById("weatherCard").style.display = "none";
+          elements.weaSuggCard.style.display = "none";
+          return null;
+        }
+      }
+
+      function nf(val) {
+        return val === null || val === undefined || val === "" ? "-" : val;
+      }
+
+      // parse crop names like "Rice_Chilli" into ["Rice","Chilli"] and sowing date likewise
+      function splitUnderscoreList(str) {
+        if (!str) return [];
+        return ("" + str)
+          .split("_")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      function daysBetween(dateStr) {
+        try {
+          const d = new Date(dateStr);
+          if (isNaN(d)) return null;
+          const diff = Math.floor(
+            (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          return diff;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function renderFarmInfo(farm) {
+        // top left title
+        elements.farmTitle.textContent =
+          nf(farm.polygon_name) || "Polygon details";
+        const area = nf(farm.polygon_area_acre);
+        elements.farmSub.textContent = `ID: ${nf(
+          farm.polygon_id
+        )} · Area: ${area} acre`;
+
+        // plan summary top-right
+        const planType = nf(farm.plan_type);
+        const planVariant = nf(farm.plan_variant);
+        elements.planTypeVariant.textContent = `${planType}${
+          planVariant && planVariant !== "-" ? " / " + planVariant : ""
+        }`;
+
+        // days left rendering & color coding
+        let daysLeft = null;
+        if (
+          farm.days_to_expiry !== undefined &&
+          farm.days_to_expiry !== null &&
+          farm.days_to_expiry !== ""
+        ) {
+          daysLeft = Number(farm.days_to_expiry);
+        } else if (farm.plan_expiry) {
+          try {
+            const exp = new Date(farm.plan_expiry);
+            const now = new Date();
+            daysLeft = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+          } catch (e) {
+            daysLeft = null;
+          }
+        }
+        if (daysLeft === null || isNaN(daysLeft)) {
+          elements.daysLeftBox.textContent = "-- d left";
+          elements.daysLeftBox.className = "days-left days-yellow";
+        } else {
+          elements.daysLeftBox.textContent = `${daysLeft} d left`;
+          elements.daysLeftBox.className =
+            "days-left " +
+            (daysLeft <= 3
+              ? "days-red"
+              : daysLeft <= 14
+              ? "days-yellow"
+              : "days-green");
+        }
+
+        // user info
+        elements.userInfoRows.innerHTML = "";
+        const userRows = [
+          ["User ID", nf(farm.user_id)],
+          ["User name", nf(farm.user_name)],
+          ["User phone", nf(farm.user_phone)],
+          ["User address", nf(farm.user_address)],
+          ["User created", nf(farm.user_create_datetime)],
+        ];
+        userRows.forEach(([label, value]) => {
+          const r = document.createElement("div");
+          r.className = "info-row";
+          const lab = document.createElement("div");
+          lab.className = "info-label";
+          lab.textContent = label;
+          const val = document.createElement("div");
+          val.className = "info-value";
+          val.textContent = value;
+          r.appendChild(lab);
+          r.appendChild(val);
+          elements.userInfoRows.appendChild(r);
+        });
+
+        // crop info: pair crops and sowing dates
+        function parseDateFlexible(d) {
+          if (!d && d !== 0) return null;
+          // If already a Date
+          if (d instanceof Date) return isNaN(d) ? null : d;
+
+          const s = String(d).trim();
+          // YYYYMMDD (8 digits)
+          const ymd8 = /^(\d{4})(\d{2})(\d{2})$/;
+          const m = s.match(ymd8);
+          if (m) {
+            const y = Number(m[1]),
+              mo = Number(m[2]) - 1,
+              day = Number(m[3]);
+            const dt = new Date(Date.UTC(y, mo, day));
+            return isNaN(dt) ? null : dt;
+          }
+
+          // YYYY-MM-DD or YYYY/MM/DD or similar (use Date constructor safely by replacing / with -)
+          const normalized = s.replace(/\//g, "-");
+          const dt2 = new Date(normalized);
+          if (!isNaN(dt2)) return dt2;
+
+          // Fallback: try Date.parse
+          const parsed = Date.parse(s);
+          return isNaN(parsed) ? null : new Date(parsed);
+        }
+
+        // --- helper: days between (now - givenDate) in whole days ---
+        function daysBetweenDate(dateObj) {
+          if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj))
+            return null;
+          const now = new Date();
+          // use local time difference (floor): difference in ms divided by ms per day
+          const diffMs =
+            now.setHours(0, 0, 0, 0) - dateObj.setHours(0, 0, 0, 0);
+          return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        }
+
+        // crop info: pair crops and sowing dates (robust parsing for yyyymmdd)
+        elements.cropInfoRows.innerHTML = "";
+        const crops = splitUnderscoreList(farm.crop_name);
+        const sowings = splitUnderscoreList(farm.sowing_date);
+
+        // build pairs (pairwise if crop count > 0)
+        const pairs = [];
+        if (crops.length === 0 && sowings.length === 0) {
+          elements.cropInfoRows.innerHTML =
+            '<div class="farm-empty">No crop info available.</div>';
+        } else if (crops.length > 0) {
+          for (let i = 0; i < crops.length; i++) {
+            pairs.push({
+              crop: crops[i],
+              sowing: sowings[i] || sowings[0] || null,
+            });
+          }
+        } else if (sowings.length > 0) {
+          for (let i = 0; i < sowings.length; i++)
+            pairs.push({ crop: "Crop " + (i + 1), sowing: sowings[i] });
+        }
+
+        pairs.forEach((p) => {
+          const cap = document.createElement("div");
+          cap.className = "crop-capsule";
+          const t = document.createElement("div");
+          t.className = "capsule-title";
+          t.textContent = p.crop || "-";
+          const s = document.createElement("div");
+          s.className = "capsule-sub";
+
+          // parse sowing flexibly
+          const parsed = parseDateFlexible(p.sowing);
+          const sowText = parsed ? parsed.toLocaleDateString() : "-";
+          const age = parsed ? daysBetweenDate(new Date(parsed)) : null;
+
+          s.textContent = `Sowing: ${sowText}${
+            age !== null && !isNaN(age) ? " · Age: " + age + " Days" : ""
+          }`;
+          cap.appendChild(t);
+          cap.appendChild(s);
+          elements.cropInfoRows.appendChild(cap);
+        });
+
+        // plan info
+        elements.planInfoRows.innerHTML = "";
+        const planRows = [
+          ["Polygon created", nf(farm.polygon_create_datetime)],
+          ["Plan expiry", nf(farm.plan_expiry)],
+        ];
+        planRows.forEach(([label, value]) => {
+          const r = document.createElement("div");
+          r.className = "info-row";
+          const lab = document.createElement("div");
+          lab.className = "info-label";
+          lab.textContent = label;
+          const val = document.createElement("div");
+          val.className = "info-value";
+          val.textContent = value;
+          r.appendChild(lab);
+          r.appendChild(val);
+          elements.planInfoRows.appendChild(r);
+        });
+
+        // status & active pills
+        const statusVal = String(farm.status || "").trim();
+        const activeVal = farm.active;
+        if (statusVal) {
+          elements.statusPill.textContent = statusVal;
+          // color decision: if status === '1' or 'active' set green else red
+          if (statusVal === "1" || /active/i.test(statusVal)) {
+            elements.statusPill.className = "pill pill-green";
+          } else {
+            elements.statusPill.className = "pill pill-red";
+          }
+        } else {
+          elements.statusPill.textContent = "-";
+          elements.statusPill.className = "pill pill-red";
+        }
+
+        if (activeVal !== undefined && activeVal !== null) {
+          elements.activePill.textContent = String(activeVal);
+          if (String(activeVal) === "1")
+            elements.activePill.className = "pill pill-green";
+          else elements.activePill.className = "pill pill-red";
+        } else {
+          elements.activePill.textContent = "-";
+          elements.activePill.className = "pill pill-red";
+        }
+
+        elements.polygonMeta.textContent = `Plan duration: ${nf(
+          farm.plan_dur
+        )} months`;
+        elements.farmInfoCard.style.display = "block";
+      }
+
+      document
+        .getElementById("tileForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const {
+            polygonIdInput,
+            indexDropdown,
+            obsDateInput,
+            satelliteTypeInput,
+            planVariantInput,
+            loading,
+          } = elements;
+          loading.style.display = "inline";
+          saveFormToLocalStorage();
+          const polygon_id = polygonIdInput.value.trim();
+          await fetchFarmList(polygon_id);
+          const formData = new FormData();
+          formData.append("user_id", "1");
+          formData.append("polygon_id", polygonIdInput.value.trim());
+          formData.append("index", indexDropdown.value.trim());
+          formData.append("obs_date", obsDateInput.value);
+          formData.append("satellite", satelliteTypeInput.value);
+          const plan_variant = planVariantInput?.value?.trim() || "";
+          if (plan_variant) formData.append("plan_variant", plan_variant);
+          try {
+            const resp = await axios.post(`${novoBase}/gis/tiles`, formData);
+            const data = resp.data || {};
+            const tileList = data?.tileInfo?.tile_path;
+            if (data.response_status && tileList && tileList.length > 0) {
+              const bounds = tileList[0][1];
+              const center = {
+                lat: (bounds[0][0] + bounds[1][0]) / 2,
+                lng: (bounds[0][1] + bounds[1][1]) / 2,
+              };
+              initMap(center);
+              clearOverlays();
+              tileList.forEach(([path, bounds]) => {
+                const tileUrl = novoBase + path.replace("./", "/");
+                addImageOverlay(tileUrl, bounds);
+              });
+            } else {
+              alert("No tiles found for the given inputs.");
+            }
+          } catch (err) {
+            console.error("Error fetching tiles:", err);
+            alert("Failed to fetch data.");
+          } finally {
+            loading.style.display = "none";
+          }
+        });
+
+      // ===== WEATHER FUNCTIONS (new) =====
+
+      /**
+       * parsePolygonGeoFirstPair
+       * Input: polygon_geo WKT string like:
+       * "POLYGON ((81.85207094997168 25.40948843504045,81.852674...))"
+       * Returns: { lat: 25.40948843504045, lon: 81.85207094997168 } or null
+       */
+      function parsePolygonGeoFirstPair(wkt) {
+        if (!wkt || typeof wkt !== "string") return null;
+        // find first coordinate pair: numbers (can have decimals, optional minus)
+        const m = wkt.match(/(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/);
+        if (!m) return null;
+        const lon = parseFloat(m[1]);
+        const lat = parseFloat(m[2]);
+        if (isNaN(lat) || isNaN(lon)) return null;
+        return { lat, lon };
+      }
+
+      /**
+       * fetchWeather(lat, lon)
+       * Calls: https://apiv2.agridoot.co.in:12443/ad/v2/weather/forecast?lat=...&lon=...
+       * Header: x-api-key: agridoot_a7c3d1f905be4d67b14fa12e5e8c32bd
+       */
+      async function fetchWeather(lat, lon) {
+        const url = `${weatherBase}/ad/v2/weather/forecast?lat=${encodeURIComponent(
+          lat
+        )}&lon=${encodeURIComponent(lon)}`;
+        try {
+          const resp = await axios.get(url, {
+            headers: {
+              "x-api-key": weatherApiKey,
+            },
+            timeout: 10000,
+          });
+          return resp.data;
+        } catch (err) {
+          console.error("fetchWeather error:", err);
+          return null;
+        }
+      }
+
+      /**
+       * renderWeatherCard
+       * Accepts the full response object (as provided in your example under "Res")
+       */
+      function renderWeatherCard(resp) {
+        const card = document.getElementById("weatherCard");
+        const currentBox = document.getElementById("weather_current");
+        const hourlyBox = document.getElementById("weather_hourly");
+        const dailyBox = document.getElementById("weather_daily");
+        const locEl = document.getElementById("weather_location");
+        const statusEl = document.getElementById("weather_status");
+        const dtEl = document.getElementById("weather_datetime");
+        const summaryEl = document.getElementById("weather_summary");
+
+        if (!resp || !resp.weatherInfo) {
+          card.style.display = "none";
+          return;
+        }
+        const w = resp.weatherInfo;
+        // header
+        const city =
+          w.location?.city ||
+          `${w.location?.latitude},${w.location?.longitude}`;
+        locEl.textContent = `Weather — ${city}`;
+        dtEl.textContent = w.current?.observed_datetime || w.datetime || "-";
+        statusEl.textContent = `Current: ${w.current?.weather_text || "-"}`;
+
+        // current details
+        currentBox.innerHTML = `
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="weather-block">
+              <div style="font-weight:700">Temp</div>
+              <div>${w.current?.temperature ?? "-"} °C</div>
+              <div class="meta-small">Feels: ${
+                w.current?.realfeel_temperature ?? "-"
+              } °C</div>
+            </div>
+            <div class="weather-block">
+              <div style="font-weight:700">Humidity</div>
+              <div>${w.current?.relative_humidity ?? "-"} %</div>
+              <div class="meta-small">Precip: ${
+                w.current?.precipitation_summary ?? "-"
+              }</div>
+            </div>
+            <div class="weather-block">
+              <div style="font-weight:700">Wind</div>
+              <div>${w.current?.wind_speed ?? "-"} km/h ${
+          w.current?.wind_direction ?? ""
+        }</div>
+              <div class="meta-small">Visibility: ${
+                w.current?.visibility ?? "-"
+              } km</div>
+            </div>
+            <div class="weather-block">
+              <div style="font-weight:700">Pressure</div>
+              <div>${w.current?.pressure ?? "-"} hPa</div>
+              <div class="meta-small">UV: ${w.current?.uv_index ?? "-"} (${
+          w.current?.uv_index_text ?? "-"
+        })</div>
+            </div>
+          </div>
+        `;
+
+        // hourly: show first 6 (or fewer)
+        hourlyBox.innerHTML = "";
+        const hourly = Array.isArray(w.forecast?.hourly)
+          ? w.forecast.hourly.slice(0, 6)
+          : [];
+        if (hourly.length === 0) {
+          hourlyBox.innerHTML = '<div class="farm-empty">No hourly data.</div>';
+        } else {
+          hourly.forEach((h) => {
+            const time = h.DateTime || h.dateTime || "-";
+            // temp extraction (different shapes possible)
+            const temp =
+              (h.Temperature && h.Temperature.Value) ||
+              h.Temperature ||
+              (h.Temperature && h.Temperature.Value) ||
+              (h.Temperature && h.Temperature);
+            const hum = h.RelativeHumidity ?? h.indoorRelativeHumidity ?? "-";
+            const icon = h.IconPhrase || h.WeatherIcon || "";
+            const div = document.createElement("div");
+            div.className = "weather-block";
+            div.innerHTML = `
+              <div style="font-weight:700">${
+                isNaN(Date.parse(time)) ? time : new Date(time).toLocaleString()
+              }</div>
+              <div>${
+                temp !== undefined && temp !== null ? temp + "°C" : "-"
+              }</div>
+              <div class="meta-small">${icon} · Hum: ${hum}</div>
+            `;
+            hourlyBox.appendChild(div);
+          });
+        }
+
+        // daily: DailyForecasts array
+        dailyBox.innerHTML = "";
+        const daily = Array.isArray(w.forecast?.daily?.DailyForecasts)
+          ? w.forecast.daily.DailyForecasts
+          : [];
+        if (daily.length === 0) {
+          dailyBox.innerHTML = '<div class="farm-empty">No daily data.</div>';
+        } else {
+          daily.forEach((d) => {
+            const date = d.Date || "-";
+            const iconPhrase = d.Day?.IconPhrase || d.Day?.ShortPhrase || "-";
+            const tmax = d.Temperature?.Maximum?.Value ?? "-";
+            const tmin = d.Temperature?.Minimum?.Value ?? "-";
+            const rainProb = d.Day?.PrecipitationProbability ?? "-";
+            const uv =
+              (d.AirAndPollen &&
+                d.AirAndPollen.find((x) => x.Name === "UVIndex")?.Value) ??
+              d.Day?.UVIndexFloat?.Maximum ??
+              "-";
+            const block = document.createElement("div");
+            block.className = "weather-block";
+            block.innerHTML = `
+              <div style="font-weight:700">${
+                isNaN(Date.parse(date))
+                  ? date
+                  : new Date(date).toLocaleDateString()
+              }</div>
+              <div>${iconPhrase}</div>
+              <div class="meta-small">T: ${tmin}° / ${tmax}° · Rain: ${rainProb}% · UV: ${uv}</div>
+            `;
+            dailyBox.appendChild(block);
+          });
+        }
+
+        // headline if exists
+        summaryEl.textContent = w.forecast?.daily?.Headline?.Text || "";
+        card.style.display = "block";
+      }
+
+      /**
+       * fetchWeatherFromFarm(farm)
+       * Called from renderFarmInfo(farm) after farm is displayed.
+       * It will attempt to read farm.polygon_geo or farm.polygon_geo_wkt or farm.polygon_geo_text (var names flexible).
+       */
+      async function fetchWeatherFromFarm(farm) {
+        // try common polygon_geo field names
+        const polygonWkt =
+          farm.polygon_geo ||
+          farm.polygon_geo_wkt ||
+          farm.polygon_wkt ||
+          farm.polygon_geometry ||
+          farm.polygon_geo_text ||
+          null;
+        if (!polygonWkt) {
+          // nothing to do
+          console.warn("No polygon_geo in farm to derive lat/lon for weather.");
+          return;
+        }
+        const coords = parsePolygonGeoFirstPair(polygonWkt);
+        if (!coords) {
+          console.warn("Failed to parse polygon_geo for first coordinate.");
+          return;
+        }
+        // coords: {lat, lon} (because WKT first pair is "lon lat" and parser returns lat/lon properly)
+        try {
+          const data = await fetchWeather(coords.lat, coords.lon);
+          if (data) renderWeatherCard(data);
+        } catch (err) {
+          const card = document.getElementById("weatherCard");
+          card.style.display = "block";
+          document.getElementById("weather_current").innerHTML =
+            '<div class="farm-empty">Failed to load weather data.</div>';
+        }
+      }
+
+      // ===== WEASUGG (crop suggestions) =====
+
+      // sanitize crop to be server-key-safe (removes whitespace & special chars)
+      function sanitizeForServerKey(str) {
+        if (!str && str !== 0) return "";
+        let s = String(str).trim();
+        // common replacements
+        s = s.replace(/&/g, "and");
+        s = s.replace(/@/g, "at");
+        s = s.replace(/\+/g, "plus");
+        // replace any sequence of non-alphanumeric characters with underscore
+        s = s.replace(/[^0-9A-Za-z]+/g, "_");
+        // collapse multiple underscores and trim leading/trailing underscores
+        s = s.replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+        // lowercase normalize
+        s = s.toLowerCase();
+        return s || "crop";
+      }
+
+      // format 20250626 -> 2025-06-26
+      function formatSowingYYYYMMDD(s) {
+        if (!s) return "";
+        const str = String(s).trim();
+        const m = str.match(/^(\d{4})(\d{2})(\d{2})$/);
+        if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+        // if already ISO-ish:
+        if (!isNaN(Date.parse(str))) {
+          const d = new Date(str);
+          const y = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${y}-${mm}-${dd}`;
+        }
+        return str;
+      }
+
+      /**
+       * fetchWeaSugg
+       * Uses sanitized crop token for 'crop' query param to avoid server cache key whitespace issue.
+       * Keeps original label in crop_label (harmless if server ignores).
+       */
+      async function fetchWeaSugg(
+        cropLabel,
+        sowingISO,
+        lat,
+        lon,
+        lang = "English"
+      ) {
+        try {
+          const sanitized = sanitizeForServerKey(cropLabel);
+          const url = `${novoBase}/ad/v1.5/gyan/weasugg`;
+          // axios handles params encoding
+          const params = {
+            crop: sanitized,
+            sowing: sowingISO || "",
+            lat: lat,
+            lon: lon,
+            lang: lang,
+            crop_label: cropLabel,
+          };
+          const resp = await axios.get(url, { params, timeout: 12000 });
+          return resp.data;
+        } catch (err) {
+          console.error("fetchWeaSugg error:", err);
+          return null;
+        }
+      }
+
+      function renderWeaSuggBlocks(results) {
+        const container = elements.weaSuggContainer;
+        container.innerHTML = "";
+        if (!results || results.length === 0) {
+          container.innerHTML =
+            '<div class="farm-empty">No suggestions available.</div>';
+          elements.weaSuggCard.style.display = "block";
+          elements.weaSuggStatus.textContent = "No suggestions";
+          return;
+        }
+
+        results.forEach((r) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "sugg-block";
+
+          const title = document.createElement("div");
+          title.style.fontWeight = "800";
+          title.style.marginBottom = "6px";
+          title.textContent = `${
+            r._meta?.cropLabel || r.crop || "Crop"
+          } · Sowing: ${r._meta?.sowingISO || "-"}`;
+
+          const statusLine = document.createElement("div");
+          statusLine.className = "meta-small";
+          statusLine.style.marginBottom = "8px";
+          statusLine.textContent = `Status: ${
+            r.response_status
+              ? r.response_message || r.dronaWea?.status || "OK"
+              : r.response_message || "Failed"
+          }`;
+
+          const suggDiv = document.createElement("div");
+          suggDiv.className = "sugg-markdown";
+
+          // suggestion text may be in dronaWea.sugg or top-level sugg
+          const rawMarkdown = (r.dronaWea && r.dronaWea.sugg) || r.sugg || "";
+
+          let html = "";
+          try {
+            html = marked.parse(rawMarkdown || "");
+          } catch (e) {
+            html = "<pre>" + (rawMarkdown || "") + "</pre>";
+          }
+          const safe = DOMPurify.sanitize(html);
+          suggDiv.innerHTML =
+            safe || '<div class="farm-empty">No suggestion text.</div>';
+
+          wrapper.appendChild(title);
+          wrapper.appendChild(statusLine);
+          wrapper.appendChild(suggDiv);
+
+          container.appendChild(wrapper);
+        });
+
+        elements.weaSuggCard.style.display = "block";
+        elements.weaSuggStatus.textContent = `Rendered ${results.length} suggestion(s)`;
+      }
+
+      /**
+       * fetchWeaSuggFromFarm
+       * Extracts crops & sowings from farm, pairs them, calls weasugg for each pair.
+       */
+      async function fetchWeaSuggFromFarm(farm) {
+        elements.weaSuggCard.style.display = "none";
+        elements.weaSuggContainer.innerHTML = "";
+        elements.weaSuggStatus.textContent = "Fetching…";
+
+        if (!farm) {
+          elements.weaSuggStatus.textContent = "No farm provided";
+          return;
+        }
+
+        // polygon WKT -> coords
+        const polygonWkt =
+          farm.polygon_geo ||
+          farm.polygon_geo_wkt ||
+          farm.polygon_wkt ||
+          farm.polygon_geometry ||
+          farm.polygon_geo_text ||
+          null;
+
+        if (!polygonWkt) {
+          elements.weaSuggStatus.textContent = "No polygon WKT";
+          elements.weaSuggCard.style.display = "block";
+          elements.weaSuggContainer.innerHTML =
+            '<div class="farm-empty">No polygon WKT to derive lat/lon.</div>';
+          return;
+        }
+
+        const coords = parsePolygonGeoFirstPair(polygonWkt);
+        if (!coords) {
+          elements.weaSuggStatus.textContent = "Failed to parse polygon coords";
+          elements.weaSuggCard.style.display = "block";
+          elements.weaSuggContainer.innerHTML =
+            '<div class="farm-empty">Failed to parse polygon geometry.</div>';
+          return;
+        }
+
+        // parse crops and sowings (underscored lists)
+        const crops = splitUnderscoreList(farm.crop_name || "");
+        const sowingsRaw = splitUnderscoreList(farm.sowing_date || "");
+
+        const sowingsISO = sowingsRaw
+          .map((s) => formatSowingYYYYMMDD(s))
+          .filter(Boolean);
+
+        // build pairs
+        const pairs = [];
+        if (crops.length > 0) {
+          for (let i = 0; i < crops.length; i++) {
+            pairs.push({
+              cropLabel: crops[i],
+              sowingISO: sowingsISO[i] || sowingsISO[0] || "",
+            });
+          }
+        } else if (sowingsISO.length > 0) {
+          for (let i = 0; i < sowingsISO.length; i++) {
+            pairs.push({
+              cropLabel: `Crop ${i + 1}`,
+              sowingISO: sowingsISO[i],
+            });
+          }
+        } else {
+          elements.weaSuggStatus.textContent = "No crops or sowing dates";
+          elements.weaSuggCard.style.display = "block";
+          elements.weaSuggContainer.innerHTML =
+            '<div class="farm-empty">No crop or sowing information available for suggestions.</div>';
+          return;
+        }
+
+        // fetch for each pair (parallel but limited concurrency)
+        const concurrency = 4;
+        const results = [];
+        const queue = pairs.slice();
+        async function worker() {
+          while (queue.length > 0) {
+            const p = queue.shift();
+            if (!p) break;
+            try {
+              const res = await fetchWeaSugg(
+                p.cropLabel,
+                p.sowingISO,
+                coords.lat,
+                coords.lon,
+                "English"
+              );
+              // attach metadata for UI (original crop label & sowing)
+              if (res && typeof res === "object") {
+                res._meta = { cropLabel: p.cropLabel, sowingISO: p.sowingISO };
+                results.push(res);
+              } else {
+                results.push({
+                  response_status: false,
+                  response_message: "No response",
+                  _meta: { cropLabel: p.cropLabel, sowingISO: p.sowingISO },
+                });
+              }
+            } catch (err) {
+              results.push({
+                response_status: false,
+                response_message: "Request failed",
+                _meta: { cropLabel: p.cropLabel, sowingISO: p.sowingISO },
+              });
+            }
+          }
+        }
+
+        const workers = [];
+        for (let i = 0; i < Math.min(concurrency, pairs.length); i++)
+          workers.push(worker());
+        await Promise.all(workers);
+
+        renderWeaSuggBlocks(results);
+      }
+
+      // ===== end weasugg functions =====
+
+      // window.onload = function () {
+      //   initMap();
+      //   loadFormFromLocalStorage();
+      //   validateForm();
+      //   const pid = elements.polygonIdInput.value.trim();
+      //   if (pid) {
+      //     fetchFarmList(pid);
+      //     fetchObservationDates();
+      //   }
+      // };
+
+      window.onload = async function () {
+        initMap();
+        loadFormFromLocalStorage();
+        validateForm();
+
+        const phone = elements.phoneInput.value.trim();
+        const savedPolygonId = localStorage.getItem("polygon_id");
+
+        if (phone && phone.length === 10) {
+          try {
+            const user_id = await fetchUserIdFromPhone(phone);
+            window.__ACTIVE_USER_ID__ = user_id;
+
+            const farms = await fetchPolygonsForUser(user_id);
+            populatePolygonDropdown(farms);
+
+            // ✅ restore selected polygon AFTER dropdown is populated
+            if (savedPolygonId) {
+              elements.polygonSelect.value = savedPolygonId;
+              elements.polygonIdInput.value = savedPolygonId;
+
+              fetchFarmList(savedPolygonId);
+              fetchObservationDates();
+            }
+          } catch (e) {
+            console.warn("Failed to restore phone → polygon state");
+          }
+        }
+      };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  </body>
+</html>

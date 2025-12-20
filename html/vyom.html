@@ -427,7 +427,7 @@
             <option value="NDRE" data-satellite="Sentinel-2">
               NDRE - Normalized Difference Red Edge Index (B05, B08)
             </option>
-            <option value="NDVI" data-satellite="Sentinel-2">
+            <option value="NDVI" data-satellite="Sentinel-2" selected>
               NDVI - Normalized Difference Vegetation Index
             </option>
             <option value="NDWI" data-satellite="Sentinel-2">
@@ -508,6 +508,24 @@
           readonly
           placeholder="Satellite Type"
         />
+
+        <select id="lang_select">
+          <option value="English">English</option>
+          <option value="Hindi" selected>Hindi (हिंदी)</option>
+          <option value="Hinglish">Hinglish</option>
+          <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+          <option value="Urdu">Urdu (اردو)</option>
+          <option value="Marathi">Marathi (मराठी)</option>
+          <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+          <option value="Rajasthani">Rajasthani</option>
+          <option value="Bengali">Bengali (বাংলা)</option>
+          <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+          <option value="Assamese">Assamese (অসমীয়া)</option>
+          <option value="Tamil">Tamil (தமிழ்)</option>
+          <option value="Telugu">Telugu (తెలుగు)</option>
+          <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+          <option value="Malayalam">Malayalam (മലയാളം)</option>
+        </select>
 
         <button type="submit">Load</button>
         <div id="loading" class="spinner" style="display: none">
@@ -647,6 +665,7 @@
       let map;
       let overlays = [];
       const elements = {
+        langSelect: document.getElementById("lang_select"),
         indexDropdown: document.getElementById("satellite-index"),
         satelliteTypeInput: document.getElementById("satellite-type"),
         planVariantInput: document.getElementById("plan_variant"),
@@ -858,6 +877,7 @@
           "obs_date",
           "satellite-type",
           "plan_variant",
+          "lang_select",
         ].forEach((key) => {
           const el = document.getElementById(key);
           if (el) localStorage.setItem(key, el.value);
@@ -871,6 +891,7 @@
           "obs_date",
           "satellite-type",
           "plan_variant",
+          "lang_select",
         ].forEach((key) => {
           const value = localStorage.getItem(key);
           if (value) {
@@ -1555,6 +1576,8 @@
           return;
         }
 
+        const lang = elements.langSelect?.value || "Hindi";
+
         // polygon WKT -> coords
         const polygonWkt =
           farm.polygon_geo ||
@@ -1627,7 +1650,7 @@
                 p.sowingISO,
                 coords.lat,
                 coords.lon,
-                "English"
+                lang
               );
               // attach metadata for UI (original crop label & sowing)
               if (res && typeof res === "object") {
